@@ -68,7 +68,7 @@ import sys
 from pathlib import Path
 Path(os.environ['ARGUMENTS_PATH']).write_text(json.dumps(sys.argv[1:]), encoding='utf-8')
 if sys.argv[1:] == ['status']:
-    print(json.dumps({'plugin_version': '1.0.0', 'trackers': []}))
+    print(json.dumps({'plugin_version': '1.0.1', 'trackers': []}))
 """,
             encoding="utf-8",
         )
@@ -100,7 +100,7 @@ class PluginManifestTests(unittest.TestCase):
         hook = json.loads((PLUGIN_ROOT / "hooks/hooks.json").read_text())
 
         self.assertEqual(manifest["name"], PLUGIN_ROOT.name)
-        self.assertEqual(manifest["version"], "1.0.0")
+        self.assertEqual(manifest["version"], "1.0.1")
         self.assertEqual(manifest["license"], "MIT")
         self.assertEqual(
             manifest["repository"],
@@ -255,7 +255,7 @@ class PluginHookTests(unittest.TestCase):
 
     def test_status_formatter_shows_only_current_task(self) -> None:
         payload = {
-            "plugin_version": "1.0.0",
+            "plugin_version": "1.0.1",
             "trackers": [
                 {
                     "issue": "OPE-1",
@@ -308,6 +308,50 @@ class PluginHookTests(unittest.TestCase):
 
 
 class PluginFileSafetyTests(unittest.TestCase):
+    def test_cli_falls_back_to_codex_managed_plugin_data(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            sandbox = PluginSandbox(Path(directory))
+            environment = sandbox.env()
+            environment.pop("PLUGIN_DATA")
+            expected = (
+                sandbox.codex_home
+                / "plugins"
+                / "data"
+                / "multica-codex-sync-multica-agent-sync"
+            )
+
+            version = subprocess.run(
+                [sys.executable, "-B", str(CLI_ENTRYPOINT), "version"],
+                env=environment,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=10,
+            )
+            self.assertEqual(version.returncode, 0, version.stderr)
+            self.assertTrue((expected / ".multica-codex-sync-owned").is_file())
+
+            states = expected / "states"
+            states.mkdir()
+            (states / "run-test.json").write_text(
+                json.dumps({"status": "running", "issue": "OPE-5987"}),
+                encoding="utf-8",
+            )
+            status_result = subprocess.run(
+                [sys.executable, "-B", str(CLI_ENTRYPOINT), "status"],
+                env=environment,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=10,
+            )
+            self.assertEqual(status_result.returncode, 0, status_result.stderr)
+            payload = json.loads(status_result.stdout)
+            self.assertEqual(payload["trackers"][0]["issue"], "OPE-5987")
+            self.assertFalse(
+                (sandbox.multica_home / "plugin-data" / "multica-codex-sync").exists()
+            )
+
     def test_external_run_ids_are_hashed_before_becoming_paths(self) -> None:
         malicious = "../../outside/secret"
         state_path = core.state_path_for_run(malicious)
@@ -455,7 +499,7 @@ class PluginLifecycleTests(unittest.TestCase):
             payload = json.loads(result.stdout)
             self.assertTrue(payload["multica_configured"])
             self.assertTrue(payload["plugin_data_private"])
-            self.assertEqual(payload["plugin_version"], "1.0.0")
+            self.assertEqual(payload["plugin_version"], "1.0.1")
 
     def test_doctor_fails_cleanly_when_multica_is_not_configured(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

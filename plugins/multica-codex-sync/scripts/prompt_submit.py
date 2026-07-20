@@ -13,18 +13,13 @@ import time
 from pathlib import Path
 from typing import Any
 
+from multica_codex_sync.paths import resolve_plugin_data
 
-HOME = Path.home()
-MULTICA_HOME = Path(os.environ.get("MULTICA_HOME", HOME / ".multica")).expanduser()
+
 PLUGIN_ROOT = Path(
     os.environ.get("PLUGIN_ROOT", Path(__file__).resolve().parents[1])
 ).expanduser().resolve()
-PLUGIN_DATA = Path(
-    os.environ.get(
-        "PLUGIN_DATA",
-        MULTICA_HOME / "plugin-data" / "multica-codex-sync",
-    )
-).expanduser().absolute()
+PLUGIN_DATA = resolve_plugin_data()
 LOG_PATH = PLUGIN_DATA / "hook.log"
 TRACK_COMMAND = PLUGIN_ROOT / "scripts" / "multica_codex_track.py"
 MULTICA_COMMAND_TIMEOUT_SECONDS = 20
