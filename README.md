@@ -38,7 +38,10 @@ For a reproducible install, add the public marketplace at an exact release tag,
 then install the plugin:
 
 ```bash
+# Step 1 of 2: register the GitHub marketplace at this exact release tag.
 codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+
+# Step 2 of 2: install and enable the plugin from that marketplace.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
@@ -93,7 +96,10 @@ For convenient stable upgrades, add the marketplace with `--ref main`. Refresh
 the marketplace and reinstall the new snapshot in place with:
 
 ```bash
+# Step 1 of 2: refresh the configured Git marketplace snapshot.
 codex plugin marketplace upgrade multica-agent-sync
+
+# Step 2 of 2: reinstall the plugin from the refreshed snapshot.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
@@ -114,7 +120,10 @@ trackers whose saved process identity still matches and preserves history.
 Then remove the plugin and, if no other plugin uses it, the marketplace:
 
 ```bash
+# Required: uninstall the plugin from Codex.
 codex plugin remove multica-codex-sync@multica-agent-sync
+
+# Optional: also forget this marketplace if you will not use it again.
 codex plugin marketplace remove multica-agent-sync
 ```
 

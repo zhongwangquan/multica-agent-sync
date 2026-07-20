@@ -63,9 +63,23 @@ def main() -> int:
         )
         require("`main`" in text, f"missing stable channel in {readme.name}")
         require("`develop`" in text, f"missing test channel in {readme.name}")
+        command_labels = (
+            ("# Step 1 of 2:", "# Required:", "# Optional:")
+            if readme.name == "README.md"
+            else ("# 第 1/2 步：", "# 必做：", "# 可选：")
+        )
+        for label in command_labels:
+            require(label in text, f"missing command annotation {label} in {readme.name}")
 
     channels = (ROOT / "docs" / "release-channels.md").read_text(encoding="utf-8")
-    for expected in ("`vX.Y.Z`", "`main`", "`develop`", f"--ref {release_tag}"):
+    for expected in (
+        "`vX.Y.Z`",
+        "`main`",
+        "`develop`",
+        f"--ref {release_tag}",
+        "# Step 1 of 2:",
+        "# Step 1 of 4:",
+    ):
         require(expected in channels, f"release channels missing {expected}")
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
