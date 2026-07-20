@@ -5,6 +5,19 @@ Versioning.
 
 ## Unreleased
 
+## 1.1.3 - 2026-07-20
+
+### Fixed
+
+- Let the plugin Hook exit successfully when an upgrade has already removed
+  its old versioned cache directory but Codex has not restarted yet. This
+  prevents a stale Hook from blocking messages in every open task.
+
+### Changed
+
+- Clarify that the marketplace **Upgrade** button is a persistent refresh
+  action, not an update-available indicator.
+
 ## 1.1.2 - 2026-07-20
 
 ### Changed

@@ -51,7 +51,7 @@ registering the marketplace:
 
 ```bash
 # Optional step 1 of 2: register an exact version instead of latest stable.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.2
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.3
 
 # Step 2 of 2: install and enable that exact plugin version.
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -108,14 +108,16 @@ Choose a release channel when adding the marketplace:
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
 | omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
-| `v1.1.2` | Optional exact release | Remains pinned to that version |
+| `v1.1.3` | Optional exact release | Remains pinned to that version |
 | `develop` | Test channel | May contain unreleased changes |
 
 The default installation above follows the stable channel. In Codex Desktop,
 open **Settings → Plugins → Marketplaces**, find **Multica Agent Sync**,
 and click **Upgrade**. After the refresh, confirm that the installed plugin
 shows the new version. If it still shows the previous snapshot, open the plugin
-entry and install it again.
+entry and install it again. The **Upgrade** button remains visible when the
+marketplace is current because it is a manual refresh action, not an
+update-available indicator.
 
 The equivalent command-line flow is:
 
@@ -132,8 +134,12 @@ To install or roll back to an exact version, configure the marketplace with
 commands and the branch policy. A marketplace snapshot is not continuously
 synchronized with GitHub, so installed code changes only after these commands.
 
-This does not delete plugin data or Multica configuration. If Codex marks the
-Hook as modified, review and Trust it again, then start a new task.
+This does not delete plugin data or Multica configuration. Fully quit and
+reopen Codex Desktop after every plugin upgrade so running tasks reload the new
+versioned plugin root. Starting with `1.1.3`, a stale Hook safely exits if the
+old cache has already been removed, so it cannot block unrelated messages.
+If Codex marks the Hook as modified, review and Trust it again, then start a new
+task.
 
 ## Safe uninstall
 
