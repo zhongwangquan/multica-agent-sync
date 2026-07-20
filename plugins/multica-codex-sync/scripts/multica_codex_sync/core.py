@@ -11,18 +11,15 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
+from .paths import resolve_plugin_data
+
 HOME = Path.home()
 MULTICA_HOME = Path(os.environ.get("MULTICA_HOME", HOME / ".multica")).expanduser()
 CODEX_HOME = Path(os.environ.get("CODEX_HOME", HOME / ".codex")).expanduser()
 PLUGIN_ROOT = Path(
     os.environ.get("PLUGIN_ROOT", Path(__file__).resolve().parents[2])
 ).expanduser().resolve()
-PLUGIN_DATA = Path(
-    os.environ.get(
-        "PLUGIN_DATA",
-        MULTICA_HOME / "plugin-data" / "multica-codex-sync",
-    )
-).expanduser().absolute()
+PLUGIN_DATA = resolve_plugin_data()
 TRACK_HOME = PLUGIN_DATA
 STATES_DIR = TRACK_HOME / "states"
 LOGS_DIR = TRACK_HOME / "logs"

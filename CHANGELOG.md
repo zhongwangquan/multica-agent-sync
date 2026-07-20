@@ -5,6 +5,13 @@ Versioning.
 
 ## Unreleased
 
+## 1.0.1 - 2026-07-20
+
+### Fixed
+
+- Resolve Codex-managed `$PLUGIN_DATA` when operational Skills run outside the
+  Hook environment, so `status`, `doctor`, and `cleanup` see the real trackers.
+
 ### Changed
 
 - Make the default installation follow the latest stable `main` snapshot;

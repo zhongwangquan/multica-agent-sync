@@ -40,13 +40,13 @@ plugin-owned runtime history or Multica configuration.
 
 ```bash
 # Optional step 1 of 2: register the marketplace at an exact release tag.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.1
 
 # Step 2 of 2: install the exact version from that marketplace.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
-Replace `v1.0.0` with any published tag. A pinned marketplace remains on that
+Replace `v1.0.1` with any published tag. A pinned marketplace remains on that
 tag when upgraded, which is intentional.
 
 ## Test an unreleased version
@@ -76,7 +76,7 @@ codex plugin remove multica-codex-sync@multica-agent-sync
 codex plugin marketplace remove multica-agent-sync
 
 # Step 3 of 4: register the marketplace at the desired branch or tag.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.1
 
 # Step 4 of 4: install the plugin from the new marketplace snapshot.
 codex plugin add multica-codex-sync@multica-agent-sync
