@@ -16,7 +16,10 @@ channel and `develop` is the test channel.
 7. In a clean temporary Codex home, run:
 
    ```bash
+   # Step 1 of 2: register the clean test marketplace at the release tag.
    codex plugin marketplace add zhongwangquan/multica-agent-sync --ref vX.Y.Z
+
+   # Step 2 of 2: install the release candidate from that marketplace.
    codex plugin add multica-codex-sync@multica-agent-sync
    ```
 

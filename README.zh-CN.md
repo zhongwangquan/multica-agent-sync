@@ -34,7 +34,10 @@ local run。
 需要结果可复现时，使用明确的发布 tag 添加公开 marketplace，再安装插件：
 
 ```bash
+# 第 1/2 步：注册 GitHub marketplace，并固定到这个发布 tag。
 codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+
+# 第 2/2 步：从该 marketplace 安装并启用插件。
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
@@ -88,7 +91,10 @@ Release 也会自动提供源码压缩包。
 marketplace，再原地安装新版快照：
 
 ```bash
+# 第 1/2 步：刷新已注册的 Git marketplace 快照。
 codex plugin marketplace upgrade multica-agent-sync
+
+# 第 2/2 步：从刷新后的快照重新安装插件。
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
@@ -107,7 +113,10 @@ GitHub，只有执行上述命令后，本地安装代码才会变化。
 然后移除插件；如果没有其他插件依赖这个 marketplace，也可以一并移除：
 
 ```bash
+# 必做：从 Codex 卸载插件。
 codex plugin remove multica-codex-sync@multica-agent-sync
+
+# 可选：以后不再使用时，再移除 marketplace 来源。
 codex plugin marketplace remove multica-agent-sync
 ```
 

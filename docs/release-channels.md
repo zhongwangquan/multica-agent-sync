@@ -13,7 +13,10 @@ continuously read the GitHub working tree.
 ## Install an exact tag
 
 ```bash
+# Step 1 of 2: register the marketplace at the exact release tag.
 codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+
+# Step 2 of 2: install the plugin from the registered marketplace.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
@@ -23,14 +26,20 @@ tag when upgraded, which is intentional.
 ## Follow the stable channel
 
 ```bash
+# Step 1 of 2: register the stable marketplace channel.
 codex plugin marketplace add zhongwangquan/multica-agent-sync --ref main
+
+# Step 2 of 2: install the plugin from the registered marketplace.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
 When a new stable release is published:
 
 ```bash
+# Step 1 of 2: refresh the stable marketplace snapshot.
 codex plugin marketplace upgrade multica-agent-sync
+
+# Step 2 of 2: reinstall the plugin from the refreshed snapshot.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
@@ -40,7 +49,10 @@ plugin-owned runtime history or Multica configuration.
 ## Test an unreleased version
 
 ```bash
+# Step 1 of 2: register the unreleased test channel.
 codex plugin marketplace add zhongwangquan/multica-agent-sync --ref develop
+
+# Step 2 of 2: install the test snapshot from that marketplace.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
@@ -54,9 +66,16 @@ To switch that source to another branch or tag, remove the installed snapshot
 and marketplace registration, then add the desired ref:
 
 ```bash
+# Step 1 of 4: uninstall the currently installed plugin snapshot.
 codex plugin remove multica-codex-sync@multica-agent-sync
+
+# Step 2 of 4: remove its current marketplace registration.
 codex plugin marketplace remove multica-agent-sync
+
+# Step 3 of 4: register the marketplace at the desired branch or tag.
 codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+
+# Step 4 of 4: install the plugin from the new marketplace snapshot.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
