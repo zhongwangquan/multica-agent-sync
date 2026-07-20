@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/env python3 \"$PLUGIN_ROOT/scripts/prompt_submit.py\"",
+            "command": "if [ -f \"$PLUGIN_ROOT/scripts/prompt_submit.py\" ]; then exec /usr/bin/env python3 \"$PLUGIN_ROOT/scripts/prompt_submit.py\"; fi",
             "timeout": 60
           }
         ]

@@ -46,7 +46,7 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 ```bash
 # 可选第 1/2 步：指定准确版本，而不是使用最新稳定版。
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.2
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.3
 
 # 第 2/2 步：安装并启用这个准确版本。
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -101,13 +101,14 @@ cleanup 和插件开发 Skill。
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
 | 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
-| `v1.1.2` | 可选固定版本 | 始终保持在该版本 |
+| `v1.1.3` | 可选固定版本 | 始终保持在该版本 |
 | `develop` | 测试通道 | 可能包含尚未发布的改动 |
 
 上面的默认安装即跟随稳定通道。在 Codex Desktop 中打开
 **设置 → Plugins → Marketplaces**，找到 **Multica Agent Sync** 并点击
 **Upgrade**。刷新后确认已安装插件显示为新版本；如果仍是旧快照，
-打开插件项并重新安装。
+打开插件项并重新安装。即使已经是最新版，**Upgrade** 按钮也会一直显示；
+它是手动刷新入口，不是“检测到新版本”的状态标记。
 
 等价的命令行流程是：
 
@@ -123,8 +124,10 @@ codex plugin add multica-codex-sync@multica-agent-sync
 [发布通道说明](docs/release-channels.md)。marketplace 快照不会持续自动同步
 GitHub，只有执行上述命令后，本地安装代码才会变化。
 
-该过程不会删除插件数据或 Multica 配置。如果 Codex 把 Hook 标记为 modified，
-请重新核对并 Trust，然后新建任务。
+该过程不会删除插件数据或 Multica 配置。每次插件升级后都要完整退出并
+重新打开 Codex Desktop，让已运行任务重新加载新的版本化插件目录。从 `1.1.3`
+开始，如果旧缓存已被替换，旧 Hook 会安全退出，不会再阻断其他消息。
+如果 Codex 把 Hook 标记为 modified，请重新核对并 Trust，然后新建任务。
 
 ## 安全卸载
 
