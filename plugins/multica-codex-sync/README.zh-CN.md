@@ -35,6 +35,12 @@ tracker 从绑定完成后的准确文件偏移开始，不同步更早历史、
 不会进入进程参数或日志。
 
 内部清理代码会核对插件 ownership marker 和 tracker 进程身份。公开插件不提供
-cleanup/purge 聊天指令，也不注册运行 Skill。插件不会替换 Multica CLI、修改
+cleanup/purge 聊天指令。插件不会替换 Multica CLI、修改
 Hook 配置或 Trust，也不会删除未知数据。详见项目
 [安全模型](../../docs/security-model.zh-CN.md)。
+
+## Skills
+
+Skill 列表会显示 `help`、`doctor`、`status`、`stop`。这四个 Skill 只有在用户
+显式选择时才会触发，与 `/multica` 直接指令并存。不包含 cleanup 和插件开发
+Skill。

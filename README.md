@@ -51,7 +51,7 @@ registering the marketplace:
 
 ```bash
 # Optional step 1 of 2: register an exact version instead of latest stable.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.0
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.1
 
 # Step 2 of 2: install and enable that exact plugin version.
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -97,9 +97,9 @@ Only the `/multica` namespace is recognized. The plugin deliberately does not
 claim generic issue or stop command names that may collide with Codex features,
 templates, or other plugins.
 
-The plugin does not contribute runtime Skills. Fixed operations use the
-namespaced chat commands directly, so they do not occupy the Codex Skill list.
-The maintainer-only development Skill is not part of the public plugin.
+The plugin also contributes four explicitly invoked Skills: `help`, `doctor`,
+`status`, and `stop`. They appear in the Codex Skill picker but do not trigger
+implicitly. Cleanup and plugin-development Skills are not included.
 
 ## Upgrade
 
@@ -108,7 +108,7 @@ Choose a release channel when adding the marketplace:
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
 | omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
-| `v1.1.0` | Optional exact release | Remains pinned to that version |
+| `v1.1.1` | Optional exact release | Remains pinned to that version |
 | `develop` | Test channel | May contain unreleased changes |
 
 The default installation above follows the stable channel. In Codex Desktop,

@@ -1,6 +1,6 @@
 {
   "name": "multica-codex-sync",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Continuously sync a Codex Desktop task with a Multica issue.",
   "author": {
     "name": "Jason",
@@ -15,6 +15,7 @@
     "issue-tracking",
     "chat-sync"
   ],
+  "skills": "./skills/",
   "interface": {
     "displayName": "Multica Codex Sync",
     "shortDescription": "Sync Codex conversations with Multica issues.",
