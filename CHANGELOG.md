@@ -5,6 +5,20 @@ Versioning.
 
 ## Unreleased
 
+## 1.1.0 - 2026-07-20
+
+### Added
+
+- Add direct `/multica help` and `/multica doctor` commands, including their
+  hyphen forms.
+
+### Changed
+
+- Remove all runtime Skills from the public plugin so fixed operations no
+  longer occupy the Codex Skill list.
+- Keep cleanup as an internal lifecycle safeguard rather than a public chat or
+  Skill entry.
+
 ## 1.0.1 - 2026-07-20
 
 ### Fixed
