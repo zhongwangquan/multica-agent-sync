@@ -38,7 +38,13 @@ Codex supplies a private `$PLUGIN_DATA` directory for state and logs. Tokens do
 not appear in process arguments or logs.
 
 Internal cleanup code validates the plugin ownership marker and tracker process
-identity. The public plugin exposes no cleanup/purge chat command and no runtime
-Skills. It does not replace the Multica CLI, edit Hook configuration, alter Hook
-trust, or delete unknown data. See the repository
+identity. The public plugin exposes no cleanup/purge chat command. It does not
+replace the Multica CLI, edit Hook configuration, alter Hook trust, or delete
+unknown data. See the repository
 [security model](../../docs/security-model.md).
+
+## Skills
+
+The Skill picker exposes `help`, `doctor`, `status`, and `stop`. These Skills
+require explicit invocation and complement the direct `/multica` commands.
+Cleanup and plugin-development Skills are not included.

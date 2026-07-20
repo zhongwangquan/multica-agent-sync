@@ -5,6 +5,15 @@ Versioning.
 
 ## Unreleased
 
+## 1.1.1 - 2026-07-20
+
+### Fixed
+
+- Restore `help`, `doctor`, `status`, and `stop` as explicit Skill picker
+  entries while keeping their direct `/multica` commands.
+- Keep cleanup and plugin-development entries out of the public runtime Skill
+  list.
+
 ## 1.1.0 - 2026-07-20
 
 ### Added

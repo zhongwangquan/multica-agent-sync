@@ -1,0 +1,6 @@
+interface:
+  display_name: "Multica Codex Sync: Stop"
+  short_description: "Stop Multica tracking without deleting history."
+  default_prompt: "Use $multica-codex-sync:stop to safely stop Multica tracking."
+policy:
+  allow_implicit_invocation: false

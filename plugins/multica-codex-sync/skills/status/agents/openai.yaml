@@ -1,0 +1,6 @@
+interface:
+  display_name: "Multica Codex Sync: Status"
+  short_description: "Inspect active trackers, runs, and token usage."
+  default_prompt: "Use $multica-codex-sync:status to show the current Multica tracker state."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Multica Codex Sync: Help"
+  short_description: "Show Multica commands and setup guidance."
+  default_prompt: "Use $multica-codex-sync:help to explain the available Multica sync commands."
+policy:
+  allow_implicit_invocation: false
