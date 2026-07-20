@@ -5,6 +5,17 @@ Versioning.
 
 ## Unreleased
 
+## 1.1.4 - 2026-07-20
+
+### Changed
+
+- Remove the bundled `help`, `doctor`, `status`, and `stop` runtime Skills so
+  deterministic controls no longer enter a model-driven Skill workflow.
+- Keep `/multica help`, `/multica doctor`, `/multica status`, and
+  `/multica stop` as direct `UserPromptSubmit` Hook commands that block the
+  control prompt before it reaches the model. Issue binding still continues
+  into the model with the bound issue context by design.
+
 ## 1.1.3 - 2026-07-20
 
 ### Fixed

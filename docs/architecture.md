@@ -30,6 +30,12 @@ command parser ----> lifecycle CLI ----> Multica local-run API
 - `scripts/multica_codex_sync/cli.py` owns tracker lifecycle, status, doctor,
   and conservative cleanup.
 
+The plugin does not bundle runtime Skills. Fixed control commands (`status`,
+`stop`, `help`, and `doctor`) return Hook `decision: block` output before a
+model turn starts. The issue-binding command is different by design: it starts
+the tracker and continues the prompt with exact issue context so Codex can do
+the bound work.
+
 ## Extension boundary
 
 Agent-specific event and conversation parsing belongs in an adapter. Multica

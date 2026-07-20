@@ -1,6 +1,0 @@
-interface:
-  display_name: "Multica Codex Sync: Doctor"
-  short_description: "Diagnose Multica installation and local readiness."
-  default_prompt: "Use $multica-codex-sync:doctor to diagnose why Multica sync is not ready."
-policy:
-  allow_implicit_invocation: false
