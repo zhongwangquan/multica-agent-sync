@@ -30,6 +30,11 @@ Equivalent hyphen forms are `/multica-4158`, `/multica-status`,
 `/multica-stop`, `/multica-help`, and `/multica-doctor`. No other command
 namespace is recognized.
 
+These are Hook commands, not Skills. Status, stop, help, and doctor are handled
+before the prompt reaches the model. Issue binding intentionally continues into
+the model after the Hook injects the exact issue context. Type the command text
+directly; no Multica runtime entries are added to the Skill picker.
+
 ## Privacy and safety
 
 The tracker starts at the exact offset captured after binding. It does not send
@@ -42,9 +47,3 @@ identity. The public plugin exposes no cleanup/purge chat command. It does not
 replace the Multica CLI, edit Hook configuration, alter Hook trust, or delete
 unknown data. See the repository
 [security model](../../docs/security-model.md).
-
-## Skills
-
-The Skill picker exposes `help`, `doctor`, `status`, and `stop`. These Skills
-require explicit invocation and complement the direct `/multica` commands.
-Cleanup and plugin-development Skills are not included.

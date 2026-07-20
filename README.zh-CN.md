@@ -46,7 +46,7 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 ```bash
 # 可选第 1/2 步：指定准确版本，而不是使用最新稳定版。
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.3
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.4
 
 # 第 2/2 步：安装并启用这个准确版本。
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -90,9 +90,11 @@ GitHub Release 也会自动提供源码压缩包。
 插件只识别 `/multica` 命名空间，不占用容易和 Codex 功能、模板或其他插件
 冲突的通用 issue、stop 命令。
 
-插件同时提供 `help`、`doctor`、`status`、`stop` 四个需要用户显式选择的
-Skill。它们会出现在 Codex Skill 列表中，但不会隐式触发。公开插件不包含
-cleanup 和插件开发 Skill。
+这些都是 Hook 直接指令，不是 Plugin 内置 Skill。`/multica status`、
+`/multica stop`、`/multica help` 和 `/multica doctor` 会在 prompt 进入模型前
+被拦截，不会启动一次模型驱动的 Skill 回合。`/multica 4158` 会先启动跟踪，再按
+设计携带 issue 上下文继续当前模型任务。这些指令不会出现在 Skill 列表中，需要在
+聊天框直接输入完整文本。
 
 ## 升级
 
@@ -101,7 +103,7 @@ cleanup 和插件开发 Skill。
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
 | 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
-| `v1.1.3` | 可选固定版本 | 始终保持在该版本 |
+| `v1.1.4` | 可选固定版本 | 始终保持在该版本 |
 | `develop` | 测试通道 | 可能包含尚未发布的改动 |
 
 上面的默认安装即跟随稳定通道。在 Codex Desktop 中打开
