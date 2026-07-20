@@ -124,8 +124,24 @@ def is_status_command_text(text: str) -> bool:
     )
 
 
+def is_informational_command_text(text: str) -> bool:
+    first_line = (text or "").strip().splitlines()[0] if (text or "").strip() else ""
+    return bool(
+        re.match(
+            r"^/multica(?:-|\s+)(?:help|doctor)(?:\s|$)",
+            first_line,
+            re.IGNORECASE,
+        )
+    )
+
+
 def is_control_command_text(text: str) -> bool:
-    return is_track_command_text(text) or is_stop_command_text(text) or is_status_command_text(text)
+    return (
+        is_track_command_text(text)
+        or is_stop_command_text(text)
+        or is_status_command_text(text)
+        or is_informational_command_text(text)
+    )
 
 
 def is_business_user_message(entry: dict) -> bool:

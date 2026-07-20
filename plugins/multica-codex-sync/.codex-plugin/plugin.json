@@ -1,6 +1,6 @@
 {
   "name": "multica-codex-sync",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Continuously sync a Codex Desktop task with a Multica issue.",
   "author": {
     "name": "Jason",
@@ -15,7 +15,6 @@
     "issue-tracking",
     "chat-sync"
   ],
-  "skills": "./skills/",
   "interface": {
     "displayName": "Multica Codex Sync",
     "shortDescription": "Sync Codex conversations with Multica issues.",
@@ -29,8 +28,8 @@
     ],
     "defaultPrompt": [
       "Show me how to connect this task to a Multica issue.",
-      "Check whether Multica Codex Sync is ready.",
-      "Safely clean up Multica Codex Sync before uninstalling."
+      "Show the Multica Codex Sync chat commands.",
+      "Diagnose whether Multica Codex Sync is ready."
     ]
   }
 }

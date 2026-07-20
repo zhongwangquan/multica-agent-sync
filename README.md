@@ -51,7 +51,7 @@ registering the marketplace:
 
 ```bash
 # Optional step 1 of 2: register an exact version instead of latest stable.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.1
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.0
 
 # Step 2 of 2: install and enable that exact plugin version.
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -79,6 +79,8 @@ Place one of these commands at the beginning of the first line:
 /multica 4158
 /multica status
 /multica stop
+/multica help
+/multica doctor
 ```
 
 Hyphen forms are also supported:
@@ -87,13 +89,17 @@ Hyphen forms are also supported:
 /multica-4158
 /multica-status
 /multica-stop
+/multica-help
+/multica-doctor
 ```
 
 Only the `/multica` namespace is recognized. The plugin deliberately does not
 claim generic issue or stop command names that may collide with Codex features,
 templates, or other plugins.
 
-The plugin also contributes `help`, `doctor`, `status`, and `cleanup` skills.
+The plugin does not contribute runtime Skills. Fixed operations use the
+namespaced chat commands directly, so they do not occupy the Codex Skill list.
+The maintainer-only development Skill is not part of the public plugin.
 
 ## Upgrade
 
@@ -102,11 +108,16 @@ Choose a release channel when adding the marketplace:
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
 | omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
-| `v1.0.1` | Optional exact release | Remains pinned to that version |
+| `v1.1.0` | Optional exact release | Remains pinned to that version |
 | `develop` | Test channel | May contain unreleased changes |
 
-The default installation above follows the stable channel. Refresh the
-marketplace and reinstall the new snapshot in place with:
+The default installation above follows the stable channel. In Codex Desktop,
+open **Settings → Plugins → Marketplaces**, find **Multica Agent Sync**,
+and click **Upgrade**. After the refresh, confirm that the installed plugin
+shows the new version. If it still shows the previous snapshot, open the plugin
+entry and install it again.
+
+The equivalent command-line flow is:
 
 ```bash
 # Step 1 of 2: refresh the configured Git marketplace snapshot.
@@ -126,9 +137,10 @@ Hook as modified, review and Trust it again, then start a new task.
 
 ## Safe uninstall
 
-Before removal, ask Codex to run the plugin's `cleanup` skill, or run the
-non-destructive command from the installed plugin root. Cleanup stops only
-trackers whose saved process identity still matches and preserves history.
+In each task that is actively tracking, run `/multica stop`. This stops only the
+tracker for that exact Codex task and preserves its history. A remaining
+verified watcher also stops and finalizes its own run when its plugin snapshot
+is removed.
 
 Then remove the plugin and, if no other plugin uses it, the marketplace:
 
@@ -140,10 +152,10 @@ codex plugin remove multica-codex-sync@multica-agent-sync
 codex plugin marketplace remove multica-agent-sync
 ```
 
-Normal cleanup and removal never delete Multica login data, Codex tasks, or
-unrelated files. A complete purge is available only through the `cleanup` skill
-after the user explicitly requests deletion of plugin-owned history and logs.
-See [the security model](docs/security-model.md) for exact boundaries.
+Normal removal does not delete plugin runtime history, Multica login data,
+Codex tasks, or unrelated files. The public plugin exposes no cleanup or purge
+chat command and no cleanup Skill. See
+[the security model](docs/security-model.md) for exact boundaries.
 
 ## Develop
 

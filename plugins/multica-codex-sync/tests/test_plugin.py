@@ -68,16 +68,34 @@ import sys
 from pathlib import Path
 Path(os.environ['ARGUMENTS_PATH']).write_text(json.dumps(sys.argv[1:]), encoding='utf-8')
 if sys.argv[1:] == ['status']:
-    print(json.dumps({'plugin_version': '1.0.1', 'trackers': []}))
+    print(json.dumps({'plugin_version': '1.1.0', 'trackers': []}))
+elif sys.argv[1:] == ['doctor']:
+    configured = os.environ.get('FAKE_DOCTOR_CONFIGURED', '1') == '1'
+    print(json.dumps({
+        'plugin_version': '1.1.0',
+        'plugin_root': '/private/plugin/root',
+        'plugin_data': '/private/plugin/data',
+        'plugin_data_private': True,
+        'multica_configured': configured,
+        'multica_config_path': '/private/config/with-token-location.json',
+        'codex_sessions_found': True,
+        'active_trackers': 2,
+    }))
+    raise SystemExit(0 if configured else 1)
 """,
             encoding="utf-8",
         )
         return fake_root, arguments
 
-    def run_hook(self, payload: dict | str) -> tuple[subprocess.CompletedProcess[str], Path]:
+    def run_hook(
+        self,
+        payload: dict | str,
+        environment_updates: dict[str, str] | None = None,
+    ) -> tuple[subprocess.CompletedProcess[str], Path]:
         fake_root, arguments = self.fake_tracker()
         environment = self.env(fake_root)
         environment["ARGUMENTS_PATH"] = str(arguments)
+        environment.update(environment_updates or {})
         hook_input = payload if isinstance(payload, str) else json.dumps(payload)
         result = subprocess.run(
             [sys.executable, "-B", str(HOOK)],
@@ -100,8 +118,10 @@ class PluginManifestTests(unittest.TestCase):
         hook = json.loads((PLUGIN_ROOT / "hooks/hooks.json").read_text())
 
         self.assertEqual(manifest["name"], PLUGIN_ROOT.name)
-        self.assertEqual(manifest["version"], "1.0.1")
+        self.assertEqual(manifest["version"], "1.1.0")
         self.assertEqual(manifest["license"], "MIT")
+        self.assertNotIn("skills", manifest)
+        self.assertFalse((PLUGIN_ROOT / "skills").exists())
         self.assertEqual(
             manifest["repository"],
             "https://github.com/zhongwangquan/multica-agent-sync",
@@ -179,6 +199,45 @@ class PluginHookTests(unittest.TestCase):
                 self.assertEqual(json.loads(arguments.read_text()), expected)
                 self.assertEqual(json.loads(result.stdout)["decision"], "block")
 
+    def test_help_supports_space_and_hyphen_forms_without_running_cli(self) -> None:
+        for command in ("/multica help", "/multica-help"):
+            with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
+                sandbox = PluginSandbox(Path(directory))
+                result, arguments = sandbox.run_hook({"prompt": command})
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertFalse(arguments.exists())
+                reason = json.loads(result.stdout)["reason"]
+                self.assertIn("/multica 4158", reason)
+                self.assertIn("/multica doctor", reason)
+                self.assertNotIn("cleanup", reason.lower())
+
+    def test_doctor_supports_space_and_hyphen_forms_and_redacts_paths(self) -> None:
+        for command in ("/multica doctor", "/multica-doctor"):
+            with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
+                sandbox = PluginSandbox(Path(directory))
+                result, arguments = sandbox.run_hook({"prompt": command})
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(arguments.read_text()), ["doctor"])
+                reason = json.loads(result.stdout)["reason"]
+                self.assertIn("version: 1.1.0", reason)
+                self.assertIn("multica_login: ready", reason)
+                self.assertIn("active_trackers: 2", reason)
+                self.assertNotIn("/private/", reason)
+                self.assertNotIn("token", reason.lower())
+
+    def test_doctor_explains_missing_login_even_when_cli_returns_one(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            sandbox = PluginSandbox(Path(directory))
+            result, arguments = sandbox.run_hook(
+                {"prompt": "/multica doctor"},
+                {"FAKE_DOCTOR_CONFIGURED": "0"},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(arguments.read_text()), ["doctor"])
+            reason = json.loads(result.stdout)["reason"]
+            self.assertIn("multica_login: missing", reason)
+            self.assertIn("请先安装并登录 Multica CLI", reason)
+
     def test_other_namespaces_and_embedded_commands_are_ignored(self) -> None:
         commands = (
             "/multica-sync 9",
@@ -187,6 +246,10 @@ class PluginHookTests(unittest.TestCase):
             "/ope-stop",
             "$ope-9",
             "$opc-stop",
+            "/multica cleanup",
+            "/multica-cleanup",
+            "/multica dev",
+            "/multica-dev",
             "please run /multica 9",
             "explain this\n/multica 9",
         )
@@ -255,7 +318,7 @@ class PluginHookTests(unittest.TestCase):
 
     def test_status_formatter_shows_only_current_task(self) -> None:
         payload = {
-            "plugin_version": "1.0.1",
+            "plugin_version": "1.1.0",
             "trackers": [
                 {
                     "issue": "OPE-1",
@@ -294,16 +357,24 @@ class PluginHookTests(unittest.TestCase):
             "last_server_run_status": "running",
             "session_id": "task-1",
         }
-        entry = {
-            "type": "response_item",
-            "timestamp": "now",
-            "payload": {
-                "type": "message",
-                "role": "user",
-                "content": [{"type": "input_text", "text": "/multica status"}],
-            },
-        }
-        codex_adapter.post_message(api, state, entry)
+        for command in (
+            "/multica 4158",
+            "/multica status",
+            "/multica stop",
+            "/multica help",
+            "/multica doctor",
+        ):
+            with self.subTest(command=command):
+                entry = {
+                    "type": "response_item",
+                    "timestamp": "now",
+                    "payload": {
+                        "type": "message",
+                        "role": "user",
+                        "content": [{"type": "input_text", "text": command}],
+                    },
+                }
+                codex_adapter.post_message(api, state, entry)
         self.assertEqual(api.requests, [])
 
 
@@ -499,7 +570,7 @@ class PluginLifecycleTests(unittest.TestCase):
             payload = json.loads(result.stdout)
             self.assertTrue(payload["multica_configured"])
             self.assertTrue(payload["plugin_data_private"])
-            self.assertEqual(payload["plugin_version"], "1.0.1")
+            self.assertEqual(payload["plugin_version"], "1.1.0")
 
     def test_doctor_fails_cleanly_when_multica_is_not_configured(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

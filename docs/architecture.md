@@ -20,8 +20,8 @@ command parser ----> lifecycle CLI ----> Multica local-run API
 
 - `hooks/hooks.json` registers the plugin-bundled Hook.
 - `scripts/prompt_submit.py` parses the narrow `/multica` control namespace,
-  requires an explicit task id, starts or stops a tracker, and injects issue
-  context.
+  serves help and redacted diagnostics, requires an explicit task id for
+  tracker mutations, and injects issue context.
 - `scripts/multica_codex_sync/codex_adapter.py` reads Codex Desktop rollout
   records, extracts visible user/assistant messages and usage, and watches for
   appended records.

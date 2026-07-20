@@ -1,4 +1,4 @@
-# Multica Codex Sync 1.0
+# Multica Codex Sync 1.1
 
 English | [简体中文](README.zh-CN.md)
 
@@ -22,10 +22,13 @@ Commands must begin the first line:
 /multica 4158
 /multica status
 /multica stop
+/multica help
+/multica doctor
 ```
 
-Equivalent hyphen forms are `/multica-4158`, `/multica-status`, and
-`/multica-stop`. No other command namespace is recognized.
+Equivalent hyphen forms are `/multica-4158`, `/multica-status`,
+`/multica-stop`, `/multica-help`, and `/multica-doctor`. No other command
+namespace is recognized.
 
 ## Privacy and safety
 
@@ -34,14 +37,8 @@ earlier history, control commands, hidden reasoning, or raw tool payloads.
 Codex supplies a private `$PLUGIN_DATA` directory for state and logs. Tokens do
 not appear in process arguments or logs.
 
-Cleanup validates the plugin ownership marker and tracker process identity. It
-does not replace the Multica CLI, edit Hook configuration, alter Hook trust, or
-delete unknown data. See the repository [security model](../../docs/security-model.md).
-
-## Skills
-
-- `help`: explain commands and setup.
-- `doctor`: check local readiness without exposing credentials.
-- `status`: inspect tracker state without printing conversation content.
-- `cleanup`: stop owned trackers and, only when explicitly requested, purge
-  known plugin-owned history and logs.
+Internal cleanup code validates the plugin ownership marker and tracker process
+identity. The public plugin exposes no cleanup/purge chat command and no runtime
+Skills. It does not replace the Multica CLI, edit Hook configuration, alter Hook
+trust, or delete unknown data. See the repository
+[security model](../../docs/security-model.md).

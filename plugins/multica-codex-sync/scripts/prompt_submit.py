@@ -36,6 +36,14 @@ STATUS_RE = re.compile(
     r"^\s*/multica(?:-|\s+)status(?:\s|$)",
     re.IGNORECASE,
 )
+HELP_RE = re.compile(
+    r"^\s*/multica(?:-|\s+)help(?:\s|$)",
+    re.IGNORECASE,
+)
+DOCTOR_RE = re.compile(
+    r"^\s*/multica(?:-|\s+)doctor(?:\s|$)",
+    re.IGNORECASE,
+)
 
 
 def log(message: str) -> None:
@@ -73,6 +81,68 @@ def compact_id(value: Any) -> str:
     if len(text) <= 12:
         return text
     return f"{text[:8]}…{text[-4:]}"
+
+
+def help_message() -> str:
+    return "\n".join(
+        (
+            "Multica Codex Sync 聊天指令：",
+            "",
+            "/multica 4158       开始跟踪 OPE-4158",
+            "/multica status     查看当前 Codex 任务状态",
+            "/multica stop       停止当前 Codex 任务跟踪",
+            "/multica help       查看指令说明",
+            "/multica doctor     检查安装、登录和本地环境",
+            "",
+            "也支持 /multica-4158、/multica-status、/multica-stop、",
+            "/multica-help 和 /multica-doctor。",
+            "",
+            "首次安装或 Hook 变更后，请在 Codex Settings → Hooks 中",
+            "核对 UserPromptSubmit 命令并点击 Trust，然后完整重启 Codex Desktop。",
+        )
+    )
+
+
+def format_doctor_payload(payload: Any) -> str:
+    if not isinstance(payload, dict):
+        return "Multica 诊断返回格式异常。"
+
+    configured = bool(payload.get("multica_configured"))
+    private = bool(payload.get("plugin_data_private"))
+    sessions_found = bool(payload.get("codex_sessions_found"))
+    try:
+        active_trackers = int(payload.get("active_trackers") or 0)
+    except (TypeError, ValueError):
+        active_trackers = 0
+
+    lines = [
+        "Multica Codex Sync 诊断：",
+        "",
+        f"version: {payload.get('plugin_version') or 'unknown'}",
+        f"multica_login: {'ready' if configured else 'missing'}",
+        f"plugin_data_permissions: {'private' if private else 'unsafe'}",
+        f"codex_sessions: {'found' if sessions_found else 'missing'}",
+        f"active_trackers: {active_trackers}",
+        "",
+    ]
+    if configured and private and sessions_found:
+        lines.append("基础环境正常。")
+    else:
+        lines.append("发现需要处理的项目：")
+        if not configured:
+            lines.append("- 尚未找到有效的 Multica 登录配置，请先安装并登录 Multica CLI。")
+        if not private:
+            lines.append("- 插件数据目录权限不安全，已拒绝将其视为正常环境。")
+        if not sessions_found:
+            lines.append("- 未找到 Codex Desktop 任务数据，请完整重启后新建任务。")
+    lines.extend(
+        (
+            "",
+            "如果指令没有反应，请在 Codex Settings → Hooks 中核对",
+            "UserPromptSubmit 命令、Trust 并启用 Hook，再完整重启并新建任务。",
+        )
+    )
+    return "\n".join(lines)
 
 
 def format_status_payload(payload: Any, current_session_id: str) -> str:
@@ -244,10 +314,31 @@ def main() -> int:
     start_match = START_RE.match(first_line)
     stop_match = STOP_RE.match(first_line)
     status_match = STATUS_RE.match(first_line)
-    if not start_match and not stop_match and not status_match:
+    help_match = HELP_RE.match(first_line)
+    doctor_match = DOCTOR_RE.match(first_line)
+    if not any((start_match, stop_match, status_match, help_match, doctor_match)):
         return 0
 
     session_id = first_session_id(payload)
+
+    if help_match:
+        log("help")
+        block(help_message())
+        return 0
+
+    if doctor_match:
+        result = run_tracker(["doctor"])
+        log(f"doctor rc={result.returncode}")
+        try:
+            doctor_payload = json.loads(result.stdout or "{}")
+        except json.JSONDecodeError:
+            doctor_payload = None
+        if isinstance(doctor_payload, dict) and doctor_payload:
+            block(format_doctor_payload(doctor_payload))
+        else:
+            detail = (result.stderr or result.stdout or "doctor failed").strip()
+            block(f"Multica 诊断失败：{detail}")
+        return 0
 
     if status_match:
         result = run_tracker(["status"])

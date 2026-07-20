@@ -46,7 +46,7 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 ```bash
 # 可选第 1/2 步：指定准确版本，而不是使用最新稳定版。
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.1
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.0
 
 # 第 2/2 步：安装并启用这个准确版本。
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -73,6 +73,8 @@ GitHub Release 也会自动提供源码压缩包。
 /multica 4158
 /multica status
 /multica stop
+/multica help
+/multica doctor
 ```
 
 也支持连字符形式：
@@ -81,12 +83,15 @@ GitHub Release 也会自动提供源码压缩包。
 /multica-4158
 /multica-status
 /multica-stop
+/multica-help
+/multica-doctor
 ```
 
 插件只识别 `/multica` 命名空间，不占用容易和 Codex 功能、模板或其他插件
 冲突的通用 issue、stop 命令。
 
-插件还提供 `help`、`doctor`、`status`、`cleanup` 四个 Skill。
+插件不再注册运行 Skill。固定操作直接使用上述命名空间指令，不占用
+Codex Skill 列表。维护者使用的插件开发 Skill 不包含在公开插件中。
 
 ## 升级
 
@@ -95,10 +100,15 @@ GitHub Release 也会自动提供源码压缩包。
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
 | 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
-| `v1.0.1` | 可选固定版本 | 始终保持在该版本 |
+| `v1.1.0` | 可选固定版本 | 始终保持在该版本 |
 | `develop` | 测试通道 | 可能包含尚未发布的改动 |
 
-上面的默认安装即跟随稳定通道。之后刷新 Git marketplace，再原地安装新版快照：
+上面的默认安装即跟随稳定通道。在 Codex Desktop 中打开
+**设置 → Plugins → Marketplaces**，找到 **Multica Agent Sync** 并点击
+**Upgrade**。刷新后确认已安装插件显示为新版本；如果仍是旧快照，
+打开插件项并重新安装。
+
+等价的命令行流程是：
 
 ```bash
 # 第 1/2 步：刷新已注册的 Git marketplace 快照。
@@ -117,8 +127,9 @@ GitHub，只有执行上述命令后，本地安装代码才会变化。
 
 ## 安全卸载
 
-移除前，先让 Codex 执行本插件的 `cleanup` Skill。普通 cleanup 只停止进程身份
-与插件状态完全匹配的 tracker，并保留历史。
+在每个正在跟踪的 Codex 任务中先执行 `/multica stop`。它只停止当前
+准确任务的 tracker，并保留历史。如果仍有经身份校验的 watcher，它在
+发现所属插件快照已移除后，也会完成自己的 run 并退出。
 
 然后移除插件；如果没有其他插件依赖这个 marketplace，也可以一并移除：
 
@@ -130,8 +141,8 @@ codex plugin remove multica-codex-sync@multica-agent-sync
 codex plugin marketplace remove multica-agent-sync
 ```
 
-普通清理和移除不会删除 Multica 登录、Codex 任务或无关文件。只有用户明确要求
-删除插件自有历史和日志时，`cleanup` Skill 才会执行彻底清理。精确边界见
+正常移除不会删除插件运行历史、Multica 登录、Codex 任务或无关文件。
+公开插件不提供 cleanup/purge 聊天指令，也不提供 cleanup Skill。精确边界见
 [安全模型](docs/security-model.zh-CN.md)。
 
 ## 开发

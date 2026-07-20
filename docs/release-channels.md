@@ -23,7 +23,12 @@ codex plugin add multica-codex-sync@multica-agent-sync
 Omitting `--ref` uses the repository's default `main` branch and installs its
 latest stable snapshot at that time.
 
-When a new stable release is published:
+When a new stable release is published, Codex Desktop users can open
+**Settings → Plugins → Marketplaces**, find **Multica Agent Sync**, and
+click **Upgrade**. Confirm the installed plugin version afterward; reinstall
+its plugin entry if the old snapshot is still shown.
+
+The equivalent command-line flow is:
 
 ```bash
 # Step 1 of 2: refresh the stable marketplace snapshot.
@@ -40,13 +45,13 @@ plugin-owned runtime history or Multica configuration.
 
 ```bash
 # Optional step 1 of 2: register the marketplace at an exact release tag.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.1
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.0
 
 # Step 2 of 2: install the exact version from that marketplace.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
-Replace `v1.0.1` with any published tag. A pinned marketplace remains on that
+Replace `v1.1.0` with any published tag. A pinned marketplace remains on that
 tag when upgraded, which is intentional.
 
 ## Test an unreleased version
@@ -76,15 +81,16 @@ codex plugin remove multica-codex-sync@multica-agent-sync
 codex plugin marketplace remove multica-agent-sync
 
 # Step 3 of 4: register the marketplace at the desired branch or tag.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.1
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.0
 
 # Step 4 of 4: install the plugin from the new marketplace snapshot.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
 This uses Codex's plugin manager; do not manually delete plugin directories.
-Run the plugin cleanup skill first only when an active tracker must be stopped.
-Explicit purge remains a separate, user-confirmed operation.
+Run `/multica stop` in each active task before removal when possible. Any
+remaining verified watcher stops itself after its originating plugin snapshot
+is removed. No cleanup or purge chat command is exposed.
 
 ## Branch policy
 
