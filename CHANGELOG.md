@@ -5,6 +5,11 @@ Versioning.
 
 ## Unreleased
 
+### Fixed
+
+- Replace the failing third-party Star History README chart with native GitHub
+  activity links.
+
 ## 1.1.4 - 2026-07-20
 
 ### Changed

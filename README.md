@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 [![CI](https://github.com/zhongwangquan/multica-agent-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/zhongwangquan/multica-agent-sync/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync/releases/latest)
-[![GitHub stars](https://img.shields.io/github/stars/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync)
 [![Open issues](https://img.shields.io/github/issues/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync/issues)
 
 Multica Agent Sync is an open-source Codex plugin that binds one Codex Desktop
@@ -179,17 +179,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [architecture](docs/architecture.md), an
 comments, docstrings, commits, Issues, and pull requests use English; user
 documentation is maintained in English and Chinese.
 
-## Project trends
+## Project activity
 
 The plugin contains no analytics or telemetry. Public adoption and maintenance
-trends come only from GitHub:
+signals come only from GitHub. These links use GitHub's native pages so the
+README does not depend on a third-party star-history renderer:
 
-- [Stars over time](https://www.star-history.com/#zhongwangquan/multica-agent-sync&Date)
+- [Repository overview](https://github.com/zhongwangquan/multica-agent-sync)
 - [Contributors](https://github.com/zhongwangquan/multica-agent-sync/graphs/contributors)
+- [Commit activity](https://github.com/zhongwangquan/multica-agent-sync/graphs/commit-activity)
 - [Pull request and issue activity](https://github.com/zhongwangquan/multica-agent-sync/pulse)
 - [Releases](https://github.com/zhongwangquan/multica-agent-sync/releases)
-
-[![Star History Chart](https://api.star-history.com/svg?repos=zhongwangquan/multica-agent-sync&type=Date)](https://www.star-history.com/#zhongwangquan/multica-agent-sync&Date)
 
 ## License
 
