@@ -1,0 +1,63 @@
+name: Bug report
+description: Report a reproducible plugin, Hook, sync, install, upgrade, or uninstall problem.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Never include tokens, rollout files, real Hook payloads, or private issue content.
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      placeholder: 2.0.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: macOS version and Codex Desktop version.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Chat command or Hook
+        - Message synchronization
+        - Token usage
+        - Install or upgrade
+        - Safe uninstall
+        - Purge
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Use synthetic issue IDs, paths, and content.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed tokens, private content, logs, rollout files, and user-specific paths.
+          required: true

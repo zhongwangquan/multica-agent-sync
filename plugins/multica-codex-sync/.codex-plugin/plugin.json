@@ -1,0 +1,36 @@
+{
+  "name": "multica-codex-sync",
+  "version": "2.0.0",
+  "description": "Continuously sync a Codex Desktop task with a Multica issue.",
+  "author": {
+    "name": "Jason",
+    "url": "https://github.com/zhongwangquan"
+  },
+  "homepage": "https://github.com/zhongwangquan/multica-agent-sync#readme",
+  "repository": "https://github.com/zhongwangquan/multica-agent-sync",
+  "license": "MIT",
+  "keywords": [
+    "multica",
+    "codex",
+    "issue-tracking",
+    "chat-sync"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Multica Codex Sync",
+    "shortDescription": "Sync Codex conversations with Multica issues.",
+    "longDescription": "Bind a Codex Desktop task to a Multica issue, then continuously sync new visible messages and token usage. Tracker state stays in private plugin data.",
+    "developerName": "Jason",
+    "category": "Productivity",
+    "capabilities": [
+      "Issue binding",
+      "Continuous chat sync",
+      "Local hooks"
+    ],
+    "defaultPrompt": [
+      "Show me how to connect this task to a Multica issue.",
+      "Check whether Multica Codex Sync is ready.",
+      "Safely clean up Multica Codex Sync before uninstalling."
+    ]
+  }
+}

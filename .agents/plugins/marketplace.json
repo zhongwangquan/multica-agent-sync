@@ -1,0 +1,20 @@
+{
+  "name": "multica-agent-sync",
+  "interface": {
+    "displayName": "Multica Agent Sync"
+  },
+  "plugins": [
+    {
+      "name": "multica-codex-sync",
+      "source": {
+        "source": "local",
+        "path": "./plugins/multica-codex-sync"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
