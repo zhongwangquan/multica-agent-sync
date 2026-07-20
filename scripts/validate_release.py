@@ -52,10 +52,21 @@ def main() -> int:
     ):
         require(forbidden not in runtime, f"forbidden runtime text: {forbidden}")
 
+    release_tag = f"v{version}"
     for readme in (ROOT / "README.md", ROOT / "README.zh-CN.md"):
         text = readme.read_text(encoding="utf-8")
         require("multica-agent-sync" in text, f"missing public install source in {readme.name}")
         require("/multica status" in text, f"missing command docs in {readme.name}")
+        require(
+            f"--ref {release_tag}" in text,
+            f"missing exact-tag install for {release_tag} in {readme.name}",
+        )
+        require("`main`" in text, f"missing stable channel in {readme.name}")
+        require("`develop`" in text, f"missing test channel in {readme.name}")
+
+    channels = (ROOT / "docs" / "release-channels.md").read_text(encoding="utf-8")
+    for expected in ("`vX.Y.Z`", "`main`", "`develop`", f"--ref {release_tag}"):
+        require(expected in channels, f"release channels missing {expected}")
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     require(f"## {version}" in changelog, "release version missing from changelog")

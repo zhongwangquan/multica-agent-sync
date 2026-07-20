@@ -1,21 +1,25 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -gt 1 ]; then
-  echo "usage: $0 [marketplace-path-or-git-source]" >&2
+if [ "$#" -gt 2 ]; then
+  echo "usage: $0 [marketplace-path-or-git-source] [git-ref]" >&2
   exit 2
 fi
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 SOURCE=${1:-$ROOT}
+REF=${2:-main}
 TEMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/multica-agent-sync-smoke.XXXXXX")
 trap 'rm -rf "$TEMP_ROOT"' EXIT HUP INT TERM
 
 export CODEX_HOME="$TEMP_ROOT/codex"
 mkdir -p "$CODEX_HOME"
 
-codex plugin marketplace add "$SOURCE" --ref main 2>/dev/null || \
+if [ -d "$SOURCE" ]; then
   codex plugin marketplace add "$SOURCE"
+else
+  codex plugin marketplace add "$SOURCE" --ref "$REF"
+fi
 codex plugin add multica-codex-sync@multica-agent-sync
 codex plugin list
 

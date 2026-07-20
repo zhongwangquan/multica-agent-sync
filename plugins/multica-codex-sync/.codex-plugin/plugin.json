@@ -1,6 +1,6 @@
 {
   "name": "multica-codex-sync",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "Continuously sync a Codex Desktop task with a Multica issue.",
   "author": {
     "name": "Jason",

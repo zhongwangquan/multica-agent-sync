@@ -2,6 +2,11 @@
 
 English | [简体中文](README.zh-CN.md)
 
+[![CI](https://github.com/zhongwangquan/multica-agent-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/zhongwangquan/multica-agent-sync/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync/releases/latest)
+[![GitHub stars](https://img.shields.io/github/stars/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync/stargazers)
+[![Open issues](https://img.shields.io/github/issues/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync/issues)
+
 Multica Agent Sync is an open-source Codex plugin that binds one Codex Desktop
 task to one Multica issue. After binding, it continuously sends new visible
 conversation messages and token usage to the issue's local run.
@@ -29,12 +34,16 @@ later, but no Claude integration is included or claimed in this release.
 
 ## Install
 
-Add the public marketplace once, then install the plugin:
+For a reproducible install, add the public marketplace at an exact release tag,
+then install the plugin:
 
 ```bash
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref main
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
+
+The Git tag is the package boundary; Codex does not require a separately built
+ZIP or binary. GitHub automatically provides source archives for every release.
 
 Then:
 
@@ -72,12 +81,26 @@ The plugin also contributes `help`, `doctor`, `status`, and `cleanup` skills.
 
 ## Upgrade
 
-Refresh the Git marketplace and reinstall the newer plugin snapshot in place:
+Choose a release channel when adding the marketplace:
+
+| Ref | Purpose | Update behavior |
+| --- | --- | --- |
+| `v1.0.0` | Exact stable release | Remains pinned to that version |
+| `main` | Latest stable channel | Changes only after marketplace upgrade |
+| `develop` | Test channel | May contain unreleased changes |
+
+For convenient stable upgrades, add the marketplace with `--ref main`. Refresh
+the marketplace and reinstall the new snapshot in place with:
 
 ```bash
 codex plugin marketplace upgrade multica-agent-sync
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
+
+To install or roll back to an exact version, configure the marketplace with
+`--ref vX.Y.Z`. See [release channels](docs/release-channels.md) for switching
+commands and the branch policy. A marketplace snapshot is not continuously
+synchronized with GitHub, so installed code changes only after these commands.
 
 This does not delete plugin data or Multica configuration. If Codex marks the
 Hook as modified, review and Trust it again, then start a new task.
@@ -108,9 +131,22 @@ See [the security model](docs/security-model.md) for exact boundaries.
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [architecture](docs/architecture.md), and
-[release process](RELEASING.md). Source comments, docstrings, commits, Issues,
-and pull requests use English; user documentation is maintained in English and
-Chinese.
+[release process](RELEASING.md). To smoke-test a public branch or tag, run
+`./scripts/smoke-install.sh zhongwangquan/multica-agent-sync <ref>`. Source
+comments, docstrings, commits, Issues, and pull requests use English; user
+documentation is maintained in English and Chinese.
+
+## Project trends
+
+The plugin contains no analytics or telemetry. Public adoption and maintenance
+trends come only from GitHub:
+
+- [Stars over time](https://www.star-history.com/#zhongwangquan/multica-agent-sync&Date)
+- [Contributors](https://github.com/zhongwangquan/multica-agent-sync/graphs/contributors)
+- [Pull request and issue activity](https://github.com/zhongwangquan/multica-agent-sync/pulse)
+- [Releases](https://github.com/zhongwangquan/multica-agent-sync/releases)
+
+[![Star History Chart](https://api.star-history.com/svg?repos=zhongwangquan/multica-agent-sync&type=Date)](https://www.star-history.com/#zhongwangquan/multica-agent-sync&Date)
 
 ## License
 

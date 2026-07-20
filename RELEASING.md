@@ -1,13 +1,17 @@
 # Releasing
 
-Releases use Semantic Versioning and immutable Git tags.
+Releases use Semantic Versioning and immutable Git tags. `main` is the stable
+channel and `develop` is the test channel.
 
-1. Create a release branch and update `VERSION`, the plugin manifest version,
-   both root READMEs when commands changed, and `CHANGELOG.md`.
+1. Create a release branch from `develop` and update `VERSION`, the plugin
+   manifest version, both root READMEs when commands changed, and
+   `CHANGELOG.md`.
 2. Run `./scripts/test.sh`.
 3. Run `./scripts/smoke-install.sh .` against the local marketplace.
-4. Open a pull request and obtain review for behavior-changing releases.
-5. Merge to `main`, create an annotated `vX.Y.Z` tag, and push the tag.
+4. Open a pull request to `main` and obtain review for behavior-changing
+   releases.
+5. Merge to `main`, create an annotated `vX.Y.Z` tag on that merge, and push the
+   tag.
 6. Create a GitHub Release from the tag.
 7. In a clean temporary Codex home, run:
 
@@ -18,6 +22,8 @@ Releases use Semantic Versioning and immutable Git tags.
 
 8. Confirm the installed manifest version and repeat the manual Hook Trust test
    in Codex Desktop.
+9. Merge the released `main` state back into `develop` before accepting more
+   feature work.
 
 Never move or replace an existing release tag. Security fixes receive a new
 version and release notes.
