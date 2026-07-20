@@ -5,6 +5,13 @@ Versioning.
 
 ## Unreleased
 
+## 1.1.2 - 2026-07-20
+
+### Changed
+
+- Publish a maintenance release for validating Codex Desktop's manual
+  marketplace Upgrade flow. Runtime behavior and Hook commands are unchanged.
+
 ## 1.1.1 - 2026-07-20
 
 ### Fixed

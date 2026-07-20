@@ -68,11 +68,11 @@ import sys
 from pathlib import Path
 Path(os.environ['ARGUMENTS_PATH']).write_text(json.dumps(sys.argv[1:]), encoding='utf-8')
 if sys.argv[1:] == ['status']:
-    print(json.dumps({'plugin_version': '1.1.1', 'trackers': []}))
+    print(json.dumps({'plugin_version': '1.1.2', 'trackers': []}))
 elif sys.argv[1:] == ['doctor']:
     configured = os.environ.get('FAKE_DOCTOR_CONFIGURED', '1') == '1'
     print(json.dumps({
-        'plugin_version': '1.1.1',
+        'plugin_version': '1.1.2',
         'plugin_root': '/private/plugin/root',
         'plugin_data': '/private/plugin/data',
         'plugin_data_private': True,
@@ -118,7 +118,7 @@ class PluginManifestTests(unittest.TestCase):
         hook = json.loads((PLUGIN_ROOT / "hooks/hooks.json").read_text())
 
         self.assertEqual(manifest["name"], PLUGIN_ROOT.name)
-        self.assertEqual(manifest["version"], "1.1.1")
+        self.assertEqual(manifest["version"], "1.1.2")
         self.assertEqual(manifest["license"], "MIT")
         self.assertEqual(manifest["skills"], "./skills/")
         skills_root = PLUGIN_ROOT / "skills"
@@ -229,7 +229,7 @@ class PluginHookTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(json.loads(arguments.read_text()), ["doctor"])
                 reason = json.loads(result.stdout)["reason"]
-                self.assertIn("version: 1.1.1", reason)
+                self.assertIn("version: 1.1.2", reason)
                 self.assertIn("multica_login: ready", reason)
                 self.assertIn("active_trackers: 2", reason)
                 self.assertNotIn("/private/", reason)
@@ -328,7 +328,7 @@ class PluginHookTests(unittest.TestCase):
 
     def test_status_formatter_shows_only_current_task(self) -> None:
         payload = {
-            "plugin_version": "1.1.1",
+            "plugin_version": "1.1.2",
             "trackers": [
                 {
                     "issue": "OPE-1",
@@ -580,7 +580,7 @@ class PluginLifecycleTests(unittest.TestCase):
             payload = json.loads(result.stdout)
             self.assertTrue(payload["multica_configured"])
             self.assertTrue(payload["plugin_data_private"])
-            self.assertEqual(payload["plugin_version"], "1.1.1")
+            self.assertEqual(payload["plugin_version"], "1.1.2")
 
     def test_doctor_fails_cleanly_when_multica_is_not_configured(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

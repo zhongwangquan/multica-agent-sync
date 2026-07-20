@@ -46,7 +46,7 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 ```bash
 # 可选第 1/2 步：指定准确版本，而不是使用最新稳定版。
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.1
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.2
 
 # 第 2/2 步：安装并启用这个准确版本。
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -101,7 +101,7 @@ cleanup 和插件开发 Skill。
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
 | 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
-| `v1.1.1` | 可选固定版本 | 始终保持在该版本 |
+| `v1.1.2` | 可选固定版本 | 始终保持在该版本 |
 | `develop` | 测试通道 | 可能包含尚未发布的改动 |
 
 上面的默认安装即跟随稳定通道。在 Codex Desktop 中打开
