@@ -2,6 +2,11 @@
 
 [English](README.md) | 简体中文
 
+[![CI](https://github.com/zhongwangquan/multica-agent-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/zhongwangquan/multica-agent-sync/actions/workflows/ci.yml)
+[![最新版本](https://img.shields.io/github/v/release/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync/releases/latest)
+[![GitHub Stars](https://img.shields.io/github/stars/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync/stargazers)
+[![待处理 Issue](https://img.shields.io/github/issues/zhongwangquan/multica-agent-sync)](https://github.com/zhongwangquan/multica-agent-sync/issues)
+
 Multica Agent Sync 是一个开源 Codex 插件：它把一个 Codex Desktop 任务绑定
 到一个 Multica issue，并持续把绑定后的可见对话和 token 用量同步到对应的
 local run。
@@ -26,12 +31,15 @@ local run。
 
 ## 安装
 
-只需添加一次公开 marketplace，然后安装插件：
+需要结果可复现时，使用明确的发布 tag 添加公开 marketplace，再安装插件：
 
 ```bash
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref main
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
+
+Git tag 就是插件的发布边界；Codex 不要求额外构建 ZIP 或二进制包。每个 GitHub
+Release 也会自动提供源码压缩包。
 
 安装后：
 
@@ -68,12 +76,25 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 ## 升级
 
-刷新 Git marketplace，再原地安装新版快照：
+添加 marketplace 时可以选择发布通道：
+
+| Ref | 用途 | 更新行为 |
+| --- | --- | --- |
+| `v1.0.0` | 固定稳定版本 | 始终保持在该版本 |
+| `main` | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
+| `develop` | 测试通道 | 可能包含尚未发布的改动 |
+
+希望方便地持续升级稳定版时，使用 `--ref main` 添加 marketplace。之后刷新 Git
+marketplace，再原地安装新版快照：
 
 ```bash
 codex plugin marketplace upgrade multica-agent-sync
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
+
+指定版本安装或回退时，使用 `--ref vX.Y.Z`。切换命令和分支策略见
+[发布通道说明](docs/release-channels.md)。marketplace 快照不会持续自动同步
+GitHub，只有执行上述命令后，本地安装代码才会变化。
 
 该过程不会删除插件数据或 Multica 配置。如果 Codex 把 Hook 标记为 modified，
 请重新核对并 Trust，然后新建任务。
@@ -102,8 +123,20 @@ codex plugin marketplace remove multica-agent-sync
 ```
 
 参阅 [贡献指南](CONTRIBUTING.md)、[架构说明](docs/architecture.md) 和
-[发布流程](RELEASING.md)。源码注释、docstring、提交、Issue 与 PR 使用英文；
-用户文档同时维护英文与中文。
+[发布流程](RELEASING.md)。测试 GitHub 上的公开分支或 tag，可以运行
+`./scripts/smoke-install.sh zhongwangquan/multica-agent-sync <ref>`。源码注释、
+docstring、提交、Issue 与 PR 使用英文；用户文档同时维护英文与中文。
+
+## 项目数据趋势
+
+插件不采集分析数据或遥测。公开的使用与维护趋势只来自 GitHub：
+
+- [Star 趋势](https://www.star-history.com/#zhongwangquan/multica-agent-sync&Date)
+- [贡献者趋势](https://github.com/zhongwangquan/multica-agent-sync/graphs/contributors)
+- [PR 与 Issue 活跃度](https://github.com/zhongwangquan/multica-agent-sync/pulse)
+- [版本发布记录](https://github.com/zhongwangquan/multica-agent-sync/releases)
+
+[![Star History Chart](https://api.star-history.com/svg?repos=zhongwangquan/multica-agent-sync&type=Date)](https://www.star-history.com/#zhongwangquan/multica-agent-sync&Date)
 
 ## License
 

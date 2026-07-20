@@ -1,4 +1,4 @@
-# Multica Codex Sync 2.0
+# Multica Codex Sync 1.0
 
 English | [简体中文](README.zh-CN.md)
 

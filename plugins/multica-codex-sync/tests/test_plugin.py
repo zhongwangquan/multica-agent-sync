@@ -68,7 +68,7 @@ import sys
 from pathlib import Path
 Path(os.environ['ARGUMENTS_PATH']).write_text(json.dumps(sys.argv[1:]), encoding='utf-8')
 if sys.argv[1:] == ['status']:
-    print(json.dumps({'plugin_version': '2.0.0', 'trackers': []}))
+    print(json.dumps({'plugin_version': '1.0.0', 'trackers': []}))
 """,
             encoding="utf-8",
         )
@@ -100,7 +100,7 @@ class PluginManifestTests(unittest.TestCase):
         hook = json.loads((PLUGIN_ROOT / "hooks/hooks.json").read_text())
 
         self.assertEqual(manifest["name"], PLUGIN_ROOT.name)
-        self.assertEqual(manifest["version"], "2.0.0")
+        self.assertEqual(manifest["version"], "1.0.0")
         self.assertEqual(manifest["license"], "MIT")
         self.assertEqual(
             manifest["repository"],
@@ -255,7 +255,7 @@ class PluginHookTests(unittest.TestCase):
 
     def test_status_formatter_shows_only_current_task(self) -> None:
         payload = {
-            "plugin_version": "2.0.0",
+            "plugin_version": "1.0.0",
             "trackers": [
                 {
                     "issue": "OPE-1",
@@ -455,7 +455,7 @@ class PluginLifecycleTests(unittest.TestCase):
             payload = json.loads(result.stdout)
             self.assertTrue(payload["multica_configured"])
             self.assertTrue(payload["plugin_data_private"])
-            self.assertEqual(payload["plugin_version"], "2.0.0")
+            self.assertEqual(payload["plugin_version"], "1.0.0")
 
     def test_doctor_fails_cleanly_when_multica_is_not_configured(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

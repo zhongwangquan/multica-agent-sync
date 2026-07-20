@@ -38,5 +38,5 @@ host-independent. This boundary makes a future host adapter possible without
 pretending that different products expose equivalent Hooks or conversation
 formats.
 
-No Claude adapter, manifest, marketplace, Hook, or test is shipped in 2.0.0.
+No Claude adapter, manifest, marketplace, Hook, or test is shipped in 1.0.0.
 Adding one requires a separate design, threat review, test matrix, and release.

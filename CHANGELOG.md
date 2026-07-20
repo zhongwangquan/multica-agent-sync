@@ -5,7 +5,7 @@ Versioning.
 
 ## Unreleased
 
-## 2.0.0 - 2026-07-20
+## 1.0.0 - 2026-07-20
 
 ### Added
 
