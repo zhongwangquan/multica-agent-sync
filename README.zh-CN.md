@@ -31,18 +31,29 @@ local run。
 
 ## 安装
 
-需要结果可复现时，使用明确的发布 tag 添加公开 marketplace，再安装插件：
+普通安装不需要选择版本。Codex 默认使用仓库的 `main` 分支，因此首次安装会取得
+当时最新的稳定版：
 
 ```bash
-# 第 1/2 步：注册 GitHub marketplace，并固定到这个发布 tag。
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+# 第 1/2 步：注册 GitHub marketplace，默认取得最新稳定版。
+codex plugin marketplace add zhongwangquan/multica-agent-sync
 
 # 第 2/2 步：从该 marketplace 安装并启用插件。
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
-Git tag 就是插件的发布边界；Codex 不要求额外构建 ZIP 或二进制包。每个 GitHub
-Release 也会自动提供源码压缩包。
+如果需要固定版本或回退，可以在注册 marketplace 时选择一个已发布 tag：
+
+```bash
+# 可选第 1/2 步：指定准确版本，而不是使用最新稳定版。
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+
+# 第 2/2 步：安装并启用这个准确版本。
+codex plugin add multica-codex-sync@multica-agent-sync
+```
+
+Git tag 是可复现的插件发布边界；Codex 不要求额外构建 ZIP 或二进制包。每个
+GitHub Release 也会自动提供源码压缩包。
 
 安装后：
 
@@ -83,12 +94,11 @@ Release 也会自动提供源码压缩包。
 
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
-| `v1.0.0` | 固定稳定版本 | 始终保持在该版本 |
-| `main` | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
+| 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
+| `v1.0.0` | 可选固定版本 | 始终保持在该版本 |
 | `develop` | 测试通道 | 可能包含尚未发布的改动 |
 
-希望方便地持续升级稳定版时，使用 `--ref main` 添加 marketplace。之后刷新 Git
-marketplace，再原地安装新版快照：
+上面的默认安装即跟随稳定通道。之后刷新 Git marketplace，再原地安装新版快照：
 
 ```bash
 # 第 1/2 步：刷新已注册的 Git marketplace 快照。

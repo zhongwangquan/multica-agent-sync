@@ -6,32 +6,22 @@ continuously read the GitHub working tree.
 
 | Ref | Stability | Recommended use |
 | --- | --- | --- |
-| `vX.Y.Z` | Immutable | Production, audit, rollback, and reproducible installs |
-| `main` | Stable | Users who want the latest released version through upgrades |
+| omitted (default `main`) | Stable | Normal users who want the latest released version |
+| `vX.Y.Z` | Immutable | Audit, rollback, and reproducible installs |
 | `develop` | Unreleased | Contributors and opt-in testers |
 
-## Install an exact tag
+## Install the latest stable version
 
 ```bash
-# Step 1 of 2: register the marketplace at the exact release tag.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+# Step 1 of 2: register the marketplace without selecting a version.
+codex plugin marketplace add zhongwangquan/multica-agent-sync
 
 # Step 2 of 2: install the plugin from the registered marketplace.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
-Replace `v1.0.0` with any published tag. A pinned marketplace remains on that
-tag when upgraded, which is intentional.
-
-## Follow the stable channel
-
-```bash
-# Step 1 of 2: register the stable marketplace channel.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref main
-
-# Step 2 of 2: install the plugin from the registered marketplace.
-codex plugin add multica-codex-sync@multica-agent-sync
-```
+Omitting `--ref` uses the repository's default `main` branch and installs its
+latest stable snapshot at that time.
 
 When a new stable release is published:
 
@@ -45,6 +35,19 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 The second command replaces the installed plugin snapshot. It does not purge
 plugin-owned runtime history or Multica configuration.
+
+## Install an exact tag (optional)
+
+```bash
+# Optional step 1 of 2: register the marketplace at an exact release tag.
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+
+# Step 2 of 2: install the exact version from that marketplace.
+codex plugin add multica-codex-sync@multica-agent-sync
+```
+
+Replace `v1.0.0` with any published tag. A pinned marketplace remains on that
+tag when upgraded, which is intentional.
 
 ## Test an unreleased version
 

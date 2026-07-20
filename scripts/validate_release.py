@@ -53,13 +53,21 @@ def main() -> int:
         require(forbidden not in runtime, f"forbidden runtime text: {forbidden}")
 
     release_tag = f"v{version}"
+    default_marketplace_command = (
+        "codex plugin marketplace add zhongwangquan/multica-agent-sync"
+    )
     for readme in (ROOT / "README.md", ROOT / "README.zh-CN.md"):
         text = readme.read_text(encoding="utf-8")
+        lines = text.splitlines()
         require("multica-agent-sync" in text, f"missing public install source in {readme.name}")
         require("/multica status" in text, f"missing command docs in {readme.name}")
         require(
+            default_marketplace_command in lines,
+            f"default install must omit --ref in {readme.name}",
+        )
+        require(
             f"--ref {release_tag}" in text,
-            f"missing exact-tag install for {release_tag} in {readme.name}",
+            f"missing optional exact-tag install for {release_tag} in {readme.name}",
         )
         require("`main`" in text, f"missing stable channel in {readme.name}")
         require("`develop`" in text, f"missing test channel in {readme.name}")
@@ -77,6 +85,7 @@ def main() -> int:
         "`main`",
         "`develop`",
         f"--ref {release_tag}",
+        default_marketplace_command,
         "# Step 1 of 2:",
         "# Step 1 of 4:",
     ):
