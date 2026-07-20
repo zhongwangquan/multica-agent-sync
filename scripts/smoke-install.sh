@@ -8,14 +8,14 @@ fi
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 SOURCE=${1:-$ROOT}
-REF=${2:-main}
+REF=${2:-}
 TEMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/multica-agent-sync-smoke.XXXXXX")
 trap 'rm -rf "$TEMP_ROOT"' EXIT HUP INT TERM
 
 export CODEX_HOME="$TEMP_ROOT/codex"
 mkdir -p "$CODEX_HOME"
 
-if [ -d "$SOURCE" ]; then
+if [ -d "$SOURCE" ] || [ -z "$REF" ]; then
   codex plugin marketplace add "$SOURCE"
 else
   codex plugin marketplace add "$SOURCE" --ref "$REF"

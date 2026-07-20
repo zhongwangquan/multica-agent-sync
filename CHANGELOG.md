@@ -5,6 +5,11 @@ Versioning.
 
 ## Unreleased
 
+### Changed
+
+- Make the default installation follow the latest stable `main` snapshot;
+  exact release tags remain available as an optional pin or rollback target.
+
 ## 1.0.0 - 2026-07-20
 
 ### Added

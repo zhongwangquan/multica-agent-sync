@@ -34,19 +34,32 @@ later, but no Claude integration is included or claimed in this release.
 
 ## Install
 
-For a reproducible install, add the public marketplace at an exact release tag,
-then install the plugin:
+For a normal install, add the public marketplace without selecting a version,
+then install the plugin. Codex uses the repository's default `main` branch, so
+the first installation gets its latest stable snapshot:
 
 ```bash
-# Step 1 of 2: register the GitHub marketplace at this exact release tag.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+# Step 1 of 2: register the GitHub marketplace at its latest stable version.
+codex plugin marketplace add zhongwangquan/multica-agent-sync
 
 # Step 2 of 2: install and enable the plugin from that marketplace.
 codex plugin add multica-codex-sync@multica-agent-sync
 ```
 
-The Git tag is the package boundary; Codex does not require a separately built
-ZIP or binary. GitHub automatically provides source archives for every release.
+To pin or roll back to an exact version, optionally select a published tag when
+registering the marketplace:
+
+```bash
+# Optional step 1 of 2: register an exact version instead of latest stable.
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.0.0
+
+# Step 2 of 2: install and enable that exact plugin version.
+codex plugin add multica-codex-sync@multica-agent-sync
+```
+
+The Git tag is the reproducible package boundary; Codex does not require a
+separately built ZIP or binary. GitHub automatically provides source archives
+for every release.
 
 Then:
 
@@ -88,12 +101,12 @@ Choose a release channel when adding the marketplace:
 
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
-| `v1.0.0` | Exact stable release | Remains pinned to that version |
-| `main` | Latest stable channel | Changes only after marketplace upgrade |
+| omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
+| `v1.0.0` | Optional exact release | Remains pinned to that version |
 | `develop` | Test channel | May contain unreleased changes |
 
-For convenient stable upgrades, add the marketplace with `--ref main`. Refresh
-the marketplace and reinstall the new snapshot in place with:
+The default installation above follows the stable channel. Refresh the
+marketplace and reinstall the new snapshot in place with:
 
 ```bash
 # Step 1 of 2: refresh the configured Git marketplace snapshot.
