@@ -53,7 +53,7 @@ registering the marketplace:
 
 ```bash
 # Optional step 1 of 2: register an exact version instead of latest stable.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.4
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.5
 
 # Step 2 of 2: install and enable that exact plugin version.
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -122,7 +122,7 @@ Choose a release channel when adding the marketplace:
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
 | omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
-| `v1.1.4` | Optional exact release | Remains pinned to that version |
+| `v1.1.5` | Optional exact release | Remains pinned to that version |
 | `develop` | Test channel | May contain unreleased changes |
 
 The default installation above follows the stable channel. In Codex Desktop,

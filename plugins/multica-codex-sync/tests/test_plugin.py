@@ -70,11 +70,11 @@ import sys
 from pathlib import Path
 Path(os.environ['ARGUMENTS_PATH']).write_text(json.dumps(sys.argv[1:]), encoding='utf-8')
 if sys.argv[1:] == ['status']:
-    print(json.dumps({'plugin_version': '1.1.4', 'trackers': []}))
+    print(json.dumps({'plugin_version': '1.1.5', 'trackers': []}))
 elif sys.argv[1:] == ['doctor']:
     configured = os.environ.get('FAKE_DOCTOR_CONFIGURED', '1') == '1'
     print(json.dumps({
-        'plugin_version': '1.1.4',
+        'plugin_version': '1.1.5',
         'plugin_root': '/private/plugin/root',
         'plugin_data': '/private/plugin/data',
         'plugin_data_private': True,
@@ -120,7 +120,7 @@ class PluginManifestTests(unittest.TestCase):
         hook = json.loads((PLUGIN_ROOT / "hooks/hooks.json").read_text())
 
         self.assertEqual(manifest["name"], PLUGIN_ROOT.name)
-        self.assertEqual(manifest["version"], "1.1.4")
+        self.assertEqual(manifest["version"], "1.1.5")
         self.assertEqual(manifest["license"], "MIT")
         self.assertNotIn("skills", manifest)
         self.assertFalse((PLUGIN_ROOT / "skills").exists())
@@ -279,7 +279,7 @@ class PluginHookTests(unittest.TestCase):
                 self.assertEqual(output["decision"], "block")
                 self.assertNotIn("hookSpecificOutput", output)
                 reason = output["reason"]
-                self.assertIn("version: 1.1.4", reason)
+                self.assertIn("version: 1.1.5", reason)
                 self.assertIn("multica_login: ready", reason)
                 self.assertIn("auth_config_source: multica", reason)
                 self.assertIn("active_trackers: 2", reason)
@@ -379,7 +379,7 @@ class PluginHookTests(unittest.TestCase):
 
     def test_status_formatter_shows_only_current_task(self) -> None:
         payload = {
-            "plugin_version": "1.1.4",
+            "plugin_version": "1.1.5",
             "trackers": [
                 {
                     "issue": "OPE-1",
@@ -763,7 +763,7 @@ class PluginLifecycleTests(unittest.TestCase):
             )
             self.assertEqual(payload["auth_config_source"], "multica")
             self.assertTrue(payload["plugin_data_private"])
-            self.assertEqual(payload["plugin_version"], "1.1.4")
+            self.assertEqual(payload["plugin_version"], "1.1.5")
 
     def test_doctor_falls_back_to_wujie_login_without_printing_token(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
