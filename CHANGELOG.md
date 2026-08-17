@@ -5,8 +5,18 @@ Versioning.
 
 ## Unreleased
 
+### Added
+
+- Keep Multica configuration discovery as the default while accepting
+  authenticated Wujie configuration as a compatibility fallback, and instruct
+  bound Codex tasks to use Wujie issue commands only when `multica` is
+  unavailable.
+
 ### Fixed
 
+- Retry a permanently redirected Multica request only when the redirect origin
+  matches the locally configured Wujie endpoint, using the Wujie token without
+  forwarding Multica credentials.
 - Replace the failing third-party Star History README chart with native GitHub
   activity links.
 

@@ -11,7 +11,9 @@
 Codex Desktop，打开 **设置 → Hooks**，核对 `UserPromptSubmit` 命令，点击
 **Trust** 并开启，然后新建任务。Hook Trust 不能、也不应该由插件自动完成。
 
-插件需要 Python 3、`curl` 和已登录的 Multica CLI。
+插件需要 Python 3、`curl`，默认使用已登录的 Multica CLI，也兼容
+已登录的 Wujie CLI。配置发现优先 Multica、然后回退到 Wujie；聊天命令
+命名空间仍为 `/multica`。
 
 ## 聊天框命令
 
@@ -39,6 +41,6 @@ tracker 从绑定完成后的准确文件偏移开始，不同步更早历史、
 不会进入进程参数或日志。
 
 内部清理代码会核对插件 ownership marker 和 tracker 进程身份。公开插件不提供
-cleanup/purge 聊天指令。插件不会替换 Multica CLI、修改
+cleanup/purge 聊天指令。插件不会替换 Multica 或 Wujie CLI、修改
 Hook 配置或 Trust，也不会删除未知数据。详见项目
 [安全模型](../../docs/security-model.zh-CN.md)。

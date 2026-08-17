@@ -12,7 +12,10 @@ Install through the repository marketplace as described in the
 **Settings → Hooks**, review the `UserPromptSubmit` command, click **Trust**,
 enable it, and start a new task. Hook trust cannot and should not be automated.
 
-The plugin requires Python 3, `curl`, and an authenticated Multica CLI.
+The plugin requires Python 3, `curl`, and an authenticated Multica CLI by
+default. An authenticated Wujie CLI is accepted as a compatibility fallback.
+Configuration discovery checks Multica first, then Wujie; the chat command
+namespace remains `/multica`.
 
 ## Chat commands
 
@@ -44,6 +47,6 @@ not appear in process arguments or logs.
 
 Internal cleanup code validates the plugin ownership marker and tracker process
 identity. The public plugin exposes no cleanup/purge chat command. It does not
-replace the Multica CLI, edit Hook configuration, alter Hook trust, or delete
-unknown data. See the repository
+replace the Multica or Wujie CLI, edit Hook configuration, alter Hook trust, or
+delete unknown data. See the repository
 [security model](../../docs/security-model.md).
