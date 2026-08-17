@@ -15,7 +15,6 @@ from typing import Any
 
 from multica_codex_sync.paths import resolve_plugin_data
 
-
 PLUGIN_ROOT = Path(
     os.environ.get("PLUGIN_ROOT", Path(__file__).resolve().parents[1])
 ).expanduser().resolve()
@@ -84,7 +83,7 @@ def compact_id(value: Any) -> str:
 
 
 def help_message() -> str:
-    return "\n".join(
+    return "\n".join(  # noqa: FLY002 - line items keep command spacing reviewable
         (
             "Multica Codex Sync 聊天指令：",
             "",
@@ -288,10 +287,10 @@ def run_tracker(args: list[str]) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             command,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=MULTICA_COMMAND_TIMEOUT_SECONDS,
             env=dict(os.environ),
+            check=False,
         )
     except subprocess.TimeoutExpired as error:
         return subprocess.CompletedProcess(
@@ -300,7 +299,7 @@ def run_tracker(args: list[str]) -> subprocess.CompletedProcess[str]:
             error.stdout if isinstance(error.stdout, str) else "",
             f"timeout after {MULTICA_COMMAND_TIMEOUT_SECONDS}s",
         )
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - Hook boundary must fail closed cleanly
         return subprocess.CompletedProcess(command, 1, "", str(error))
 
 

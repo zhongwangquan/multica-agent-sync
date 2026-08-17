@@ -47,7 +47,6 @@ from .core import (
     tracker_process_matches,
 )
 
-
 TRACKER_ENTRYPOINT = Path(__file__).resolve().parents[1] / "multica_codex_track.py"
 PLUGIN_MANIFEST_PATH = TRACKER_ENTRYPOINT.parent.parent / ".codex-plugin" / "plugin.json"
 
@@ -188,7 +187,7 @@ def stop_one(state_path: Path, state: dict) -> str | None:
         else:
             server_error = str(error)
             state["server_stop_error"] = server_error
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - preserve local stop state on any API failure
         server_error = str(error)
         state["server_stop_error"] = server_error
 
@@ -373,7 +372,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         return args.func(args)
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - CLI boundary must return a clean error
         print(f"Error: {error}", file=sys.stderr)
         return 1
 

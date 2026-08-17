@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import json
-import os
 import fcntl
 import hashlib
+import json
+import os
 import shlex
 import subprocess
 import tempfile
@@ -145,6 +145,7 @@ def process_identity(pid: int) -> dict:
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             timeout=2,
+            check=False,
         )
     except (OSError, subprocess.SubprocessError):
         return {}
@@ -189,10 +190,11 @@ def tracker_process_matches(
                 break
         if not found:
             return False
-    if isinstance(expected_identity, dict) and expected_identity.get("started"):
-        if identity.get("started") != expected_identity.get("started"):
-            return False
-    return True
+    return not (
+        isinstance(expected_identity, dict)
+        and expected_identity.get("started")
+        and identity.get("started") != expected_identity.get("started")
+    )
 
 
 def cleanup_stale_api_temp_files(max_age_seconds: int = 300) -> None:
@@ -372,7 +374,7 @@ class Api:
         config_path = None
         try:
             if payload is not None:
-                body_file = tempfile.NamedTemporaryFile(
+                body_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
                     mode="wb",
                     delete=False,
                     dir=TRACK_HOME,
@@ -386,7 +388,7 @@ class Api:
                 with body_file:
                     body_file.write(payload)
 
-            config_file = tempfile.NamedTemporaryFile(
+            config_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
                 mode="w",
                 delete=False,
                 dir=TRACK_HOME,
@@ -423,9 +425,9 @@ class Api:
             result = subprocess.run(
                 command,
                 text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 timeout=45,
+                check=False,
             )
             output = result.stdout or ""
             raw_body, status, redirect_url = parse_curl_output(output)

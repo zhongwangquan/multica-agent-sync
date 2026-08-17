@@ -10,7 +10,6 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = PLUGIN_ROOT.parents[1]
 SCRIPTS = PLUGIN_ROOT / "scripts"
@@ -18,8 +17,8 @@ HOOK = SCRIPTS / "prompt_submit.py"
 CLI_ENTRYPOINT = SCRIPTS / "multica_codex_track.py"
 sys.path.insert(0, str(SCRIPTS))
 
-import prompt_submit  # noqa: E402
-from multica_codex_sync import cli, codex_adapter, core  # noqa: E402
+import prompt_submit
+from multica_codex_sync import cli, codex_adapter, core
 
 
 class PluginSandbox:
@@ -51,9 +50,9 @@ class PluginSandbox:
             [sys.executable, "-B", str(CLI_ENTRYPOINT), *args],
             env=self.env(),
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=10,
+            check=False,
         )
 
     def fake_tracker(self) -> tuple[Path, Path]:
@@ -104,9 +103,9 @@ elif sys.argv[1:] == ['doctor']:
             input=hook_input,
             env=environment,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=10,
+            check=False,
         )
         return result, arguments
 
@@ -155,9 +154,9 @@ class PluginManifestTests(unittest.TestCase):
                 input=json.dumps({"prompt": "ordinary message"}),
                 env=sandbox.env(missing_root),
                 text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 timeout=10,
+                check=False,
             )
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "")
@@ -175,9 +174,9 @@ class PluginManifestTests(unittest.TestCase):
                 input=json.dumps({"prompt": "/multica help"}),
                 env=sandbox.env(PLUGIN_ROOT),
                 text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 timeout=10,
+                check=False,
             )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("/multica doctor", json.loads(result.stdout)["reason"])
@@ -456,9 +455,9 @@ class PluginFileSafetyTests(unittest.TestCase):
                 [sys.executable, "-B", str(CLI_ENTRYPOINT), "version"],
                 env=environment,
                 text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 timeout=10,
+                check=False,
             )
             self.assertEqual(version.returncode, 0, version.stderr)
             self.assertTrue((expected / ".multica-codex-sync-owned").is_file())
@@ -473,9 +472,9 @@ class PluginFileSafetyTests(unittest.TestCase):
                 [sys.executable, "-B", str(CLI_ENTRYPOINT), "status"],
                 env=environment,
                 text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 timeout=10,
+                check=False,
             )
             self.assertEqual(status_result.returncode, 0, status_result.stderr)
             payload = json.loads(status_result.stdout)
@@ -504,10 +503,12 @@ class PluginFileSafetyTests(unittest.TestCase):
             self.assertEqual(stat.S_IMODE(path.parent.stat().st_mode), 0o700)
 
             locks = root / "locks"
-            with mock.patch.object(core, "LOCKS_DIR", locks):
-                with core.session_lock("task-id"):
-                    lock = next(locks.glob("*.lock"))
-                    self.assertEqual(stat.S_IMODE(lock.stat().st_mode), 0o600)
+            with (
+                mock.patch.object(core, "LOCKS_DIR", locks),
+                core.session_lock("task-id"),
+            ):
+                lock = next(locks.glob("*.lock"))
+                self.assertEqual(stat.S_IMODE(lock.stat().st_mode), 0o600)
 
     def test_symlinked_private_directory_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -721,9 +722,9 @@ class PluginFileSafetyTests(unittest.TestCase):
                 ),
                 mock.patch.object(core, "TRACK_HOME", root / "plugin-data"),
                 mock.patch.object(core.subprocess, "run", side_effect=fake_run),
+                self.assertRaises(core.ApiError) as raised,
             ):
-                with self.assertRaises(core.ApiError) as raised:
-                    core.Api().request("GET", "/api/test")
+                core.Api().request("GET", "/api/test")
             self.assertEqual(raised.exception.status, 301)
             self.assertEqual(len(calls), 1)
 
