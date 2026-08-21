@@ -1,6 +1,6 @@
 # Release channels
 
-The repository exposes three explicit installation choices. Codex snapshots a
+The repository exposes two explicit installation choices. Codex snapshots a
 Git marketplace when it is added or upgraded; an installed plugin does not
 continuously read the GitHub working tree.
 
@@ -8,7 +8,6 @@ continuously read the GitHub working tree.
 | --- | --- | --- |
 | omitted (default `main`) | Stable | Normal users who want the latest released version |
 | `vX.Y.Z` | Immutable | Audit, rollback, and reproducible installs |
-| `develop` | Unreleased | Contributors and opt-in testers |
 
 ## Install the latest stable version
 
@@ -54,19 +53,6 @@ codex plugin add multica-codex-sync@multica-agent-sync
 Replace `v1.1.5` with any published tag. A pinned marketplace remains on that
 tag when upgraded, which is intentional.
 
-## Test an unreleased version
-
-```bash
-# Step 1 of 2: register the unreleased test channel.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref develop
-
-# Step 2 of 2: install the test snapshot from that marketplace.
-codex plugin add multica-codex-sync@multica-agent-sync
-```
-
-Do not use `develop` when reproducibility is required. The branch may advance
-without a version tag.
-
 ## Switch refs
 
 Codex stores one configured source for the `multica-agent-sync` marketplace.
@@ -94,11 +80,12 @@ is removed. No cleanup or purge chat command is exposed.
 
 ## Branch policy
 
-- Feature and fix pull requests normally target `develop`.
+- `main` is the only long-lived branch.
+- Feature, fix, and release work uses short-lived branches created from and
+  merged back into `main` through pull requests.
 - CI must pass before merging.
-- Release pull requests promote `develop` to `main`.
 - Every public release tags the exact `main` commit as `vX.Y.Z`.
-- Urgent fixes start from `main` and are merged back to `develop`.
+- Short-lived branches should be removed after merge and verification.
 
 The plugin source itself is the Codex package. No extra ZIP, wheel, or binary is
 required. GitHub Release source archives are useful for inspection and offline

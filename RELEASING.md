@@ -1,9 +1,9 @@
 # Releasing
 
-Releases use Semantic Versioning and immutable Git tags. `main` is the stable
-channel and `develop` is the test channel.
+Releases use Semantic Versioning and immutable Git tags. `main` is the only
+long-lived branch; release work uses a short-lived branch created from `main`.
 
-1. Create a release branch from `develop` and update `VERSION`, the plugin
+1. Create a release branch from `main` and update `VERSION`, the plugin
    manifest version, both root READMEs when commands changed, and
    `CHANGELOG.md`.
 2. Run `./scripts/test.sh`.
@@ -25,8 +25,7 @@ channel and `develop` is the test channel.
 
 8. Confirm the installed manifest version and repeat the manual Hook Trust test
    in Codex Desktop.
-9. Merge the released `main` state back into `develop` before accepting more
-   feature work.
+9. Remove the short-lived release branch after the release is verified.
 
 Never move or replace an existing release tag. Security fixes receive a new
 version and release notes.
