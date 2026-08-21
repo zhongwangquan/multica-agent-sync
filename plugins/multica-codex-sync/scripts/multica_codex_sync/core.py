@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import json
-import os
 import fcntl
 import hashlib
+import json
+import os
 import shlex
 import subprocess
 import tempfile
 import time
+import urllib.parse
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from .paths import resolve_plugin_data
 
 HOME = Path.home()
 MULTICA_HOME = Path(os.environ.get("MULTICA_HOME", HOME / ".multica")).expanduser()
+WUJIE_HOME = Path(os.environ.get("WUJIE_HOME", HOME / ".wujie")).expanduser()
 CODEX_HOME = Path(os.environ.get("CODEX_HOME", HOME / ".codex")).expanduser()
 PLUGIN_ROOT = Path(
     os.environ.get("PLUGIN_ROOT", Path(__file__).resolve().parents[2])
@@ -24,7 +26,15 @@ TRACK_HOME = PLUGIN_DATA
 STATES_DIR = TRACK_HOME / "states"
 LOGS_DIR = TRACK_HOME / "logs"
 LOCKS_DIR = TRACK_HOME / "locks"
-CONFIG_CANDIDATES = [MULTICA_HOME / "config.json", MULTICA_HOME / "config-local.json"]
+MULTICA_CONFIG_CANDIDATES = [
+    MULTICA_HOME / "config.json",
+    MULTICA_HOME / "config-local.json",
+]
+WUJIE_CONFIG_CANDIDATES = [
+    WUJIE_HOME / "config.json",
+    WUJIE_HOME / "config-local.json",
+]
+CONFIG_CANDIDATES = [*MULTICA_CONFIG_CANDIDATES, *WUJIE_CONFIG_CANDIDATES]
 USAGE_TOTAL_KEYS = {
     "input_tokens": ("input_tokens",),
     "output_tokens": ("output_tokens",),
@@ -135,6 +145,7 @@ def process_identity(pid: int) -> dict:
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             timeout=2,
+            check=False,
         )
     except (OSError, subprocess.SubprocessError):
         return {}
@@ -179,10 +190,11 @@ def tracker_process_matches(
                 break
         if not found:
             return False
-    if isinstance(expected_identity, dict) and expected_identity.get("started"):
-        if identity.get("started") != expected_identity.get("started"):
-            return False
-    return True
+    return not (
+        isinstance(expected_identity, dict)
+        and expected_identity.get("started")
+        and identity.get("started") != expected_identity.get("started")
+    )
 
 
 def cleanup_stale_api_temp_files(max_age_seconds: int = 300) -> None:
@@ -254,21 +266,94 @@ def select_states(target: str | None) -> list[tuple[Path, dict]]:
     ]
 
 
-def load_config() -> dict:
-    for path in CONFIG_CANDIDATES:
+def find_config(candidates: list[Path] | None = None) -> tuple[Path, dict] | None:
+    for path in CONFIG_CANDIDATES if candidates is None else candidates:
         value = read_json(path)
         if isinstance(value, dict) and value.get("token") and value.get("server_url"):
-            return value
-    raise RuntimeError("Multica config with server_url/token was not found")
+            return path, value
+    return None
+
+
+def config_source(path: Path) -> str:
+    if path in MULTICA_CONFIG_CANDIDATES:
+        return "multica"
+    if path in WUJIE_CONFIG_CANDIDATES:
+        return "wujie"
+    return "custom"
+
+
+def load_config() -> dict:
+    selected = find_config()
+    if selected is not None:
+        return selected[1]
+    raise RuntimeError("Multica or Wujie config with server_url/token was not found")
+
+
+def url_origin(value: object, base: str = "") -> tuple[str, str, int] | None:
+    try:
+        parsed = urllib.parse.urlsplit(urllib.parse.urljoin(base, str(value)))
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            return None
+        default_port = 443 if parsed.scheme == "https" else 80
+        return parsed.scheme, parsed.hostname.lower(), parsed.port or default_port
+    except ValueError:
+        return None
+
+
+def parse_curl_output(output: str) -> tuple[str, int, str]:
+    parts = output.rsplit("\n", 2)
+    if len(parts) == 3 and parts[1].isdigit():
+        return parts[0], int(parts[1]), parts[2].strip()
+    raw_body, separator, raw_status = output.rpartition("\n")
+    status = int(raw_status) if separator and raw_status.isdigit() else 0
+    return raw_body, status, ""
+
 
 class Api:
     def __init__(self):
-        config = load_config()
+        selected = find_config()
+        if selected is None:
+            raise RuntimeError("Multica or Wujie config with server_url/token was not found")
+        self._set_config(*selected)
+
+    def _set_config(self, config_path: Path, config: dict) -> None:
+        self.config_path = config_path
         self.base = str(config["server_url"]).rstrip("/")
         self.token = str(config["token"])
         self.workspace_id = str(config.get("workspace_id") or "")
 
     def request(self, method: str, path: str, body=None):
+        try:
+            return self._request_once(method, path, body)
+        except ApiError as error:
+            fallback = self._redirect_fallback(error, path)
+            if fallback is None:
+                raise
+            self._set_config(*fallback)
+            return self._request_once(method, path, body)
+
+    def _redirect_fallback(
+        self,
+        error: ApiError,
+        path: str,
+    ) -> tuple[Path, dict] | None:
+        if (
+            config_source(self.config_path) != "multica"
+            or error.status not in {301, 308}
+            or not error.redirect_url
+        ):
+            return None
+        fallback = find_config(WUJIE_CONFIG_CANDIDATES)
+        if fallback is None or fallback[0] == self.config_path:
+            return None
+        request_url = self.base + path
+        redirect_origin = url_origin(error.redirect_url, request_url)
+        fallback_origin = url_origin(fallback[1]["server_url"])
+        if redirect_origin is None or redirect_origin != fallback_origin:
+            return None
+        return fallback
+
+    def _request_once(self, method: str, path: str, body=None):
         payload = None if body is None else json.dumps(body).encode("utf-8")
         headers = [
             f"Authorization: Bearer {self.token}",
@@ -289,7 +374,7 @@ class Api:
         config_path = None
         try:
             if payload is not None:
-                body_file = tempfile.NamedTemporaryFile(
+                body_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
                     mode="wb",
                     delete=False,
                     dir=TRACK_HOME,
@@ -303,7 +388,7 @@ class Api:
                 with body_file:
                     body_file.write(payload)
 
-            config_file = tempfile.NamedTemporaryFile(
+            config_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
                 mode="w",
                 delete=False,
                 dir=TRACK_HOME,
@@ -333,27 +418,38 @@ class Api:
                 "--config",
                 str(config_path),
                 "--write-out",
-                "\n%{http_code}",
+                "\n%{http_code}\n%{redirect_url}",
             ]
             if body_path is not None:
                 command.extend(["--data-binary", f"@{body_path}"])
             result = subprocess.run(
                 command,
                 text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 timeout=45,
+                check=False,
             )
             output = result.stdout or ""
-            raw_body, separator, raw_status = output.rpartition("\n")
-            status = int(raw_status) if separator and raw_status.isdigit() else 0
+            raw_body, status, redirect_url = parse_curl_output(output)
             if result.returncode != 0:
                 detail = (raw_body or result.stderr or f"curl exit {result.returncode}").strip()
                 if status:
-                    raise ApiError(method, path, detail, status)
+                    raise ApiError(
+                        method,
+                        path,
+                        detail,
+                        status,
+                        redirect_url=redirect_url,
+                    )
                 raise ApiError(method, path, detail)
             if status < 200 or status >= 300:
-                raise ApiError(method, path, raw_body.strip(), status)
+                raise ApiError(
+                    method,
+                    path,
+                    raw_body.strip(),
+                    status,
+                    redirect_url=redirect_url,
+                )
             return json.loads(raw_body) if raw_body.strip() else None
         finally:
             for temp_path in (body_path, config_path):
@@ -365,10 +461,19 @@ class Api:
 
 
 class ApiError(RuntimeError):
-    def __init__(self, method: str, path: str, detail: str, status: int | None = None):
+    def __init__(
+        self,
+        method: str,
+        path: str,
+        detail: str,
+        status: int | None = None,
+        *,
+        redirect_url: str = "",
+    ):
         self.method = method
         self.path = path
         self.status = status
+        self.redirect_url = redirect_url
         suffix = f" ({status})" if status else ""
         super().__init__(f"{method} {path} failed{suffix}: {detail}")
 

@@ -24,6 +24,7 @@ from .core import (
     with_upload_run,
 )
 
+
 def desktop_session_meta(path: Path):
     try:
         with path.open("r", encoding="utf-8") as handle:
@@ -449,7 +450,7 @@ def watcher(state_path: Path) -> int:
                 try:
                     complete_local_run(api, str(state.get("run_id") or ""))
                     state["last_server_run_status"] = "completed"
-                except Exception as error:
+                except Exception as error:  # noqa: BLE001 - watcher cleanup must not crash
                     state["server_stop_error"] = str(error)
                 state["status"] = "stopped"
                 state["stopped_at"] = time.time()
@@ -463,7 +464,7 @@ def watcher(state_path: Path) -> int:
                     if maybe_pause_idle_run(api, state) or refresh_local_run(api, state):
                         state["updated_at"] = time.time()
                         atomic_json(state_path, state)
-                except Exception as error:
+                except Exception as error:  # noqa: BLE001 - watcher heartbeat must recover
                     append_private_log(
                         state_log_path(state),
                         f"{time.strftime('%Y-%m-%dT%H:%M:%S')} heartbeat {error}\n",
@@ -501,7 +502,7 @@ def watcher(state_path: Path) -> int:
                 state["offset"] = position
                 state["updated_at"] = time.time()
                 atomic_json(state_path, state)
-            except Exception as error:  # keep the watcher alive and make failures inspectable
+            except Exception as error:  # noqa: BLE001 - keep watcher failures inspectable
                 handle.seek(line_start)
                 append_private_log(
                     state_log_path(state),

@@ -18,7 +18,7 @@ local run。
 
 - 通过 Codex 插件管理器安装、升级和移除。
 - Hook 跟随插件加载，安装器不修改用户 Hook 文件。
-- 不替换、不包裹 `multica` 命令。
+- 不替换、不包裹 `multica` 或 `wujie` 命令。
 - 运行状态保存在 Codex 提供的 `$PLUGIN_DATA`，并使用当前用户私有权限。
 - 清理前会核对归属、进程身份和已知文件名；未知文件一律保留。
 - 源码、版本、Issue 和 PR 都可以在 GitHub 审查与追踪。
@@ -27,7 +27,8 @@ local run。
 
 - macOS，以及支持插件的 Codex Desktop。
 - Python 3、`curl`。
-- 已安装并登录 Multica CLI。插件复用现有登录配置，不输出 access token。
+- 默认使用已安装并登录的 Multica CLI；也兼容已登录的 Wujie CLI。
+  插件会先检查 Multica 配置，再回退到 Wujie 配置，不输出 access token。
 
 ## 安装
 
@@ -46,7 +47,7 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 ```bash
 # 可选第 1/2 步：指定准确版本，而不是使用最新稳定版。
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.4
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.5
 
 # 第 2/2 步：安装并启用这个准确版本。
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -90,6 +91,13 @@ GitHub Release 也会自动提供源码压缩包。
 插件只识别 `/multica` 命名空间，不占用容易和 Codex 功能、模板或其他插件
 冲突的通用 issue、stop 命令。
 
+运行时发现仍以 Multica 为默认：先读取 `MULTICA_HOME` 或 `~/.multica`，
+只在没有有效 Multica 配置时才回退到 `WUJIE_HOME` 或 `~/.wujie`。
+注入的 Issue CLI 上下文会请求 Codex 优先使用 `multica`，仅在该命令不可用时
+回退到 `wujie`。如果选中的 Multica 端点返回永久重定向，且目标 origin 与本机
+Wujie 配置一致，插件才会使用 Wujie 配置和它自己的 token 重试一次。
+Multica 凭据不会被透传到重定向目标，未匹配本地配置的 origin 会被拒绝。
+
 这些都是 Hook 直接指令，不是 Plugin 内置 Skill。`/multica status`、
 `/multica stop`、`/multica help` 和 `/multica doctor` 会在 prompt 进入模型前
 被拦截，不会启动一次模型驱动的 Skill 回合。`/multica 4158` 会先启动跟踪，再按
@@ -103,7 +111,7 @@ GitHub Release 也会自动提供源码压缩包。
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
 | 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
-| `v1.1.4` | 可选固定版本 | 始终保持在该版本 |
+| `v1.1.5` | 可选固定版本 | 始终保持在该版本 |
 | `develop` | 测试通道 | 可能包含尚未发布的改动 |
 
 上面的默认安装即跟随稳定通道。在 Codex Desktop 中打开

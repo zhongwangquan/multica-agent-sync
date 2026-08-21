@@ -15,7 +15,6 @@ from typing import Any
 
 from multica_codex_sync.paths import resolve_plugin_data
 
-
 PLUGIN_ROOT = Path(
     os.environ.get("PLUGIN_ROOT", Path(__file__).resolve().parents[1])
 ).expanduser().resolve()
@@ -84,7 +83,7 @@ def compact_id(value: Any) -> str:
 
 
 def help_message() -> str:
-    return "\n".join(
+    return "\n".join(  # noqa: FLY002 - line items keep command spacing reviewable
         (
             "Multica Codex Sync 聊天指令：",
             "",
@@ -114,12 +113,16 @@ def format_doctor_payload(payload: Any) -> str:
         active_trackers = int(payload.get("active_trackers") or 0)
     except (TypeError, ValueError):
         active_trackers = 0
+    auth_config_source = payload.get("auth_config_source") or (
+        "multica" if configured else "missing"
+    )
 
     lines = [
         "Multica Codex Sync 诊断：",
         "",
         f"version: {payload.get('plugin_version') or 'unknown'}",
         f"multica_login: {'ready' if configured else 'missing'}",
+        f"auth_config_source: {auth_config_source}",
         f"plugin_data_permissions: {'private' if private else 'unsafe'}",
         f"codex_sessions: {'found' if sessions_found else 'missing'}",
         f"active_trackers: {active_trackers}",
@@ -130,7 +133,10 @@ def format_doctor_payload(payload: Any) -> str:
     else:
         lines.append("发现需要处理的项目：")
         if not configured:
-            lines.append("- 尚未找到有效的 Multica 登录配置，请先安装并登录 Multica CLI。")
+            lines.append(
+                "- 尚未找到有效的 Multica 或 Wujie 登录配置，"
+                "请先安装并登录 Multica CLI 或 Wujie CLI。"
+            )
         if not private:
             lines.append("- 插件数据目录权限不安全，已拒绝将其视为正常环境。")
         if not sessions_found:
@@ -200,6 +206,8 @@ def continue_with_issue_context(issue_key: str, status: str) -> None:
         "The hook system message has already shown the connection status. "
         "Do not repeat a visible connected banner in normal responses unless the user asks for link status. "
         f"Before inspecting or changing repository files, first run `multica issue get {issue_key} --output json` "
+        "or, only when the `multica` executable is unavailable, use "
+        f"`wujie issue get {issue_key} --output json` "
         "to read the issue title, description, status, assignee, labels, and linked context. "
         "If comments or run history are needed, inspect the relevant Multica issue CLI help and fetch them with JSON output. "
         "After reading the issue, briefly summarize your understanding and plan, then proceed with the repository work."
@@ -279,10 +287,10 @@ def run_tracker(args: list[str]) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             command,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=MULTICA_COMMAND_TIMEOUT_SECONDS,
             env=dict(os.environ),
+            check=False,
         )
     except subprocess.TimeoutExpired as error:
         return subprocess.CompletedProcess(
@@ -291,7 +299,7 @@ def run_tracker(args: list[str]) -> subprocess.CompletedProcess[str]:
             error.stdout if isinstance(error.stdout, str) else "",
             f"timeout after {MULTICA_COMMAND_TIMEOUT_SECONDS}s",
         )
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - Hook boundary must fail closed cleanly
         return subprocess.CompletedProcess(command, 1, "", str(error))
 
 

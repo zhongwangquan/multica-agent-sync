@@ -18,7 +18,6 @@ from .codex_adapter import (
 )
 from .core import (
     CODEX_HOME,
-    CONFIG_CANDIDATES,
     LOCKS_DIR,
     LOGS_DIR,
     PLUGIN_DATA,
@@ -31,8 +30,10 @@ from .core import (
     ApiError,
     active_states,
     atomic_json,
+    config_source,
     create_local_run,
     ensure_plugin_data,
+    find_config,
     load_states,
     pid_alive,
     process_identity,
@@ -45,7 +46,6 @@ from .core import (
     state_path_for_run,
     tracker_process_matches,
 )
-
 
 TRACKER_ENTRYPOINT = Path(__file__).resolve().parents[1] / "multica_codex_track.py"
 PLUGIN_MANIFEST_PATH = TRACKER_ENTRYPOINT.parent.parent / ".codex-plugin" / "plugin.json"
@@ -187,7 +187,7 @@ def stop_one(state_path: Path, state: dict) -> str | None:
         else:
             server_error = str(error)
             state["server_stop_error"] = server_error
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - preserve local stop state on any API failure
         server_error = str(error)
         state["server_stop_error"] = server_error
 
@@ -250,16 +250,11 @@ def status(args) -> int:
 
 
 def doctor(_args) -> int:
-    """Report local readiness without printing Multica credentials."""
+    """Report local readiness without printing Multica or Wujie credentials."""
     ensure_plugin_data()
-    config_found = False
-    config_path = None
-    for candidate in CONFIG_CANDIDATES:
-        value = read_json(candidate)
-        if isinstance(value, dict) and value.get("token") and value.get("server_url"):
-            config_found = True
-            config_path = str(candidate)
-            break
+    selected_config = find_config()
+    config_found = selected_config is not None
+    config_path = str(selected_config[0]) if selected_config is not None else None
     payload = {
         "plugin_version": plugin_version(),
         "plugin_root": str(PLUGIN_ROOT),
@@ -267,6 +262,9 @@ def doctor(_args) -> int:
         "plugin_data_private": (TRACK_HOME.stat().st_mode & 0o077) == 0,
         "multica_configured": config_found,
         "multica_config_path": config_path,
+        "auth_config_source": (
+            config_source(selected_config[0]) if selected_config is not None else "missing"
+        ),
         "codex_sessions_found": (CODEX_HOME / "sessions").is_dir(),
         "active_trackers": len(active_states()),
     }
@@ -374,7 +372,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         return args.func(args)
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - CLI boundary must return a clean error
         print(f"Error: {error}", file=sys.stderr)
         return 1
 

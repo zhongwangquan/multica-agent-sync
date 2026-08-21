@@ -19,7 +19,7 @@ later, but no Claude integration is included or claimed in this release.
 
 - Codex installs, updates, and removes the package through its plugin manager.
 - The Hook is bundled with the plugin; no installer edits user Hook files.
-- The plugin never replaces or wraps the `multica` executable.
+- The plugin never replaces or wraps the `multica` or `wujie` executable.
 - Runtime state is private and isolated in Codex-provided `$PLUGIN_DATA`.
 - Cleanup verifies ownership, process identity, and known filenames before it
   removes anything. Unknown files are preserved.
@@ -29,8 +29,10 @@ later, but no Claude integration is included or claimed in this release.
 
 - macOS and a Codex Desktop version with plugin support.
 - Python 3 and `curl`.
-- Multica CLI installed and authenticated. The plugin reuses the existing
-  Multica configuration and never prints its access token.
+- An authenticated Multica CLI installation is the default. An authenticated
+  Wujie CLI installation is accepted as a compatibility fallback. The plugin
+  checks Multica configuration first, then Wujie configuration, and never
+  prints an access token.
 
 ## Install
 
@@ -51,7 +53,7 @@ registering the marketplace:
 
 ```bash
 # Optional step 1 of 2: register an exact version instead of latest stable.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.4
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.5
 
 # Step 2 of 2: install and enable that exact plugin version.
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -97,6 +99,15 @@ Only the `/multica` namespace is recognized. The plugin deliberately does not
 claim generic issue or stop command names that may collide with Codex features,
 templates, or other plugins.
 
+Runtime discovery remains Multica-first. Authentication is read from
+`MULTICA_HOME` or `~/.multica` before falling back to `WUJIE_HOME` or
+`~/.wujie`. Injected issue context asks Codex to use `multica` first and use
+`wujie` only when the `multica` executable is unavailable. If the selected
+Multica endpoint returns a permanent redirect whose origin matches the locally
+configured Wujie endpoint, the plugin retries once with the Wujie configuration
+and its own token. Multica credentials are never forwarded through the
+redirect, and unmatched redirect origins are rejected.
+
 These are direct Hook commands, not bundled Skills. `/multica status`,
 `/multica stop`, `/multica help`, and `/multica doctor` are intercepted before
 the prompt reaches the model, so they do not start a model-driven Skill turn.
@@ -111,7 +122,7 @@ Choose a release channel when adding the marketplace:
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
 | omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
-| `v1.1.4` | Optional exact release | Remains pinned to that version |
+| `v1.1.5` | Optional exact release | Remains pinned to that version |
 | `develop` | Test channel | May contain unreleased changes |
 
 The default installation above follows the stable channel. In Codex Desktop,

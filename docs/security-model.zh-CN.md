@@ -5,6 +5,7 @@
 Codex 提供 `PLUGIN_ROOT`、`PLUGIN_DATA`、可信 Hook 定义和当前任务的准确 ID；
 用户必须在设置页人工 Trust Hook。聊天文本、Hook payload、Multica API 返回、
 issue/run ID、本地状态文件和 PID 都按不可信输入处理。
+CLI 登录优先读取现有 Multica 配置，仅把现有 Wujie 配置作为兼容回退。
 
 ## 会同步什么
 
@@ -15,6 +16,8 @@ issue/run ID、本地状态文件和 PID 都按不可信输入处理。
 
 - 目录权限为 `0700`，文件和日志为 `0600`。
 - token 不进入进程参数；临时 curl 配置仅当前用户可读，并在请求后删除。
+- 只有当 Multica 端点的永久重定向 origin 与本机 Wujie 配置一致时才会重试；
+  重试使用 Wujie token，不会透传 Multica 凭据。
 - 外部 run ID 先哈希再用作文件名。
 - 遇到符号链接形式的私有状态目录会拒绝继续。
 - 停止 tracker 时必须同时匹配 PID、命令、运行模式、状态路径和进程启动身份。
@@ -24,7 +27,8 @@ issue/run ID、本地状态文件和 PID 都按不可信输入处理。
 
 普通 cleanup 只停止身份匹配的 tracker，保留状态和日志。只有用户明确要求 purge
 时，程序才会核对插件专属 ownership marker，并删除已知的状态、日志、锁和临时
-文件；符号链接和未知文件会保留并报告。插件不会删除 Multica 配置、Codex 任务、
+文件；符号链接和未知文件会保留并报告。插件不会删除 Multica 或 Wujie 配置、
+Codex 任务、
 共享 Hook 配置或上层用户目录。
 
 ## 仍需用户信任的部分
