@@ -3,10 +3,14 @@ name: control
 description: Bind the current Codex Desktop task to a Multica issue, inspect or stop its tracker, show help, or run redacted readiness diagnostics by directly invoking the plugin CLI.
 ---
 
-# Control Multica Codex Sync
+# Control Multica Agent
 
 Execute the requested action directly with the plugin CLI. Do not resubmit the
 action as a `/multica` command and do not wait for Hook output.
+
+Treat the host-generated Skill invocation encoding as an internal detail.
+Never show it in user-facing help, status, error, or rebind instructions. Use
+the `/multica ...` command forms for every user-facing example.
 
 Use one action after selecting the Skill. Issue numbers must contain digits
 only; `4158` below is an example:
@@ -31,17 +35,9 @@ recency or another tracker.
 - For `stop`, run `stop "$CODEX_THREAD_ID"`.
 - For `doctor`, run `doctor` and report readiness without exposing filesystem
   paths, configuration contents, or credentials.
-- For `help`, explain the five actions without running a command.
-
-The explicit invocations are:
-
-```text
-$multica-codex-sync:control 4158
-$multica-codex-sync:control status
-$multica-codex-sync:control stop
-$multica-codex-sync:control help
-$multica-codex-sync:control doctor
-```
+- For `help`, explain the five actions using `/multica <issue-number>`,
+  `/multica status`, `/multica stop`, `/multica help`, and `/multica doctor`
+  without running a command.
 
 Run the command in the current model turn and use its exit status and output as
 the source of truth. Do not claim that an action succeeded before the command
@@ -50,4 +46,5 @@ otherwise report the binding result concisely.
 
 Never invent an issue number, guess a Codex task, stop all trackers, or switch
 an existing binding automatically. To bind a different issue, require an
-explicit `stop` action first and then a separate bind action.
+explicit `stop` action first and then a separate bind action. In user-facing
+instructions, say to send `/multica stop` and then `/multica <issue-number>`.

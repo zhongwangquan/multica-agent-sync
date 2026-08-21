@@ -147,6 +147,8 @@ class PluginManifestTests(unittest.TestCase):
         self.assertIn("bind <issue-number>", skill_text)
         self.assertIn("OPE-<issue-number>", skill_text)
         self.assertNotIn("normalize the issue to `OPE-4158`", skill_text)
+        self.assertNotIn("$multica-codex-sync:control", skill_text)
+        self.assertIn("/multica <issue-number>", skill_text)
         self.assertIn("Do not resubmit", skill_text)
         openai_yaml = (skill_root / "agents" / "openai.yaml").read_text(
             encoding="utf-8"
