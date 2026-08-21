@@ -19,7 +19,7 @@ later, but no Claude integration is included or claimed in this release.
 
 - Codex installs, updates, and removes the package through its plugin manager.
 - The Hook is bundled with the plugin; no installer edits user Hook files.
-- The plugin never replaces or wraps the `multica` or `wujie` executable.
+- The plugin never replaces or wraps the `multica` executable.
 - Runtime state is private and isolated in Codex-provided `$PLUGIN_DATA`.
 - Cleanup verifies ownership, process identity, and known filenames before it
   removes anything. Unknown files are preserved.
@@ -29,10 +29,8 @@ later, but no Claude integration is included or claimed in this release.
 
 - macOS and a Codex Desktop version with plugin support.
 - Python 3 and `curl`.
-- An authenticated Multica CLI installation is the default. An authenticated
-  Wujie CLI installation is accepted as a compatibility fallback. The plugin
-  checks Multica configuration first, then Wujie configuration, and never
-  prints an access token.
+- An authenticated Multica CLI installation. The plugin never prints an access
+  token.
 
 ## Install
 
@@ -53,7 +51,7 @@ registering the marketplace:
 
 ```bash
 # Optional step 1 of 2: register an exact version instead of latest stable.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.5
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.2.0
 
 # Step 2 of 2: install and enable that exact plugin version.
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -66,16 +64,18 @@ for every release.
 Then:
 
 1. Fully quit and reopen Codex Desktop.
-2. Open **Settings → Hooks**.
-3. Review the plugin's `UserPromptSubmit` command, click **Trust**, and enable
-   the Hook. Codex intentionally requires this manual security decision.
-4. Start a new Codex task.
+2. Open **Settings → Hooks**, review the plugin's `UserPromptSubmit` command,
+   click **Trust**, and enable it. Codex intentionally requires this manual
+   security decision.
+3. Start a new Codex task and send a `/multica ...` command.
 
 Do not type `/hooks` in the chat box; Hook trust is managed in Settings.
 
 ## Use
 
-Place one of these commands at the beginning of the first line:
+### Recommended: `/multica` commands
+
+Place one command at the beginning of the first line:
 
 ```text
 /multica 4158
@@ -85,35 +85,43 @@ Place one of these commands at the beginning of the first line:
 /multica doctor
 ```
 
-Hyphen forms are also supported:
+`4158` is an example issue number. Hyphen forms such as `/multica-4158` and
+`/multica-status` are also supported.
+
+### Optional: `/multica-sync` Skill
+
+Type `/multica-sync`, choose **Multica Sync**, enter one action, and submit:
 
 ```text
-/multica-4158
-/multica-status
-/multica-stop
-/multica-help
-/multica-doctor
+4158
+bind 4158
+status
+stop
+help
+doctor
 ```
 
-Only the `/multica` namespace is recognized. The plugin deliberately does not
-claim generic issue or stop command names that may collide with Codex features,
-templates, or other plugins.
+No internal invocation syntax is needed.
 
-Runtime discovery remains Multica-first. Authentication is read from
-`MULTICA_HOME` or `~/.multica` before falling back to `WUJIE_HOME` or
-`~/.wujie`. Injected issue context asks Codex to use `multica` first and use
-`wujie` only when the `multica` executable is unavailable. If the selected
-Multica endpoint returns a permanent redirect whose origin matches the locally
-configured Wujie endpoint, the plugin retries once with the Wujie configuration
-and its own token. Multica credentials are never forwarded through the
-redirect, and unmatched redirect origins are rejected.
+| Difference | `/multica` commands | `/multica-sync` Skill |
+| --- | --- | --- |
+| Positioning | Recommended | Optional |
+| Input | Type the complete command on the first line | Type `/multica-sync`, choose **Multica Sync**, then enter the action |
+| Hook Trust | Required | Not required |
+| Result | Status, stop, help, and doctor complete immediately; binding continues with issue context | The selected action runs in an Agent turn |
 
-These are direct Hook commands, not bundled Skills. `/multica status`,
-`/multica stop`, `/multica help`, and `/multica doctor` are intercepted before
-the prompt reaches the model, so they do not start a model-driven Skill turn.
-`/multica 4158` starts tracking and then intentionally lets the task continue
-with issue context. The commands do not appear in the Skill picker; type the
-exact command text in the chat box.
+The Hook recognizes only the `/multica` namespace. The separate
+`/multica-sync` name belongs to the optional Skill, so users can still type
+`/multica` commands manually. The plugin does not claim generic issue or stop
+command names that may collide with Codex features, templates, or other
+plugins.
+
+Authentication is read from `MULTICA_HOME` or `~/.multica`. Credentials are
+never forwarded to an untrusted redirect origin.
+
+Each Codex task can track only one Multica issue. To switch issues, first send
+`/multica stop`, then send the new issue number in a separate command. The
+plugin never switches an existing task automatically.
 
 ## Upgrade
 
@@ -122,7 +130,7 @@ Choose between the latest `main` snapshot and an exact release tag:
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
 | omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
-| `v1.1.5` | Optional exact release | Remains pinned to that version |
+| `v1.2.0` | Optional exact release | Remains pinned to that version |
 
 The default installation above follows the stable channel. In Codex Desktop,
 open **Settings → Plugins → Marketplaces**, find **Multica Agent Sync**,

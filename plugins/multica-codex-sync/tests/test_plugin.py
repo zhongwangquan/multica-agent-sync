@@ -68,12 +68,22 @@ import os
 import sys
 from pathlib import Path
 Path(os.environ['ARGUMENTS_PATH']).write_text(json.dumps(sys.argv[1:]), encoding='utf-8')
-if sys.argv[1:] == ['status']:
-    print(json.dumps({'plugin_version': '1.1.5', 'trackers': []}))
+if sys.argv[1:] and sys.argv[1] == 'status':
+    target = sys.argv[2] if len(sys.argv) == 3 else ''
+    session_id = os.environ.get('FAKE_TRACKER_SESSION', '')
+    trackers = []
+    if session_id and (not target or target == session_id):
+        trackers.append({
+            'issue': os.environ.get('FAKE_TRACKER_ISSUE', 'OPE-1'),
+            'session_id': session_id,
+            'status': 'running',
+            'watcher_alive': True,
+        })
+    print(json.dumps({'plugin_version': '1.2.0', 'trackers': trackers}))
 elif sys.argv[1:] == ['doctor']:
     configured = os.environ.get('FAKE_DOCTOR_CONFIGURED', '1') == '1'
     print(json.dumps({
-        'plugin_version': '1.1.5',
+        'plugin_version': '1.2.0',
         'plugin_root': '/private/plugin/root',
         'plugin_data': '/private/plugin/data',
         'plugin_data_private': True,
@@ -83,6 +93,9 @@ elif sys.argv[1:] == ['doctor']:
         'active_trackers': 2,
     }))
     raise SystemExit(0 if configured else 1)
+elif sys.argv[1:] and sys.argv[1] == 'start' and os.environ.get('FAKE_START_ALREADY_TRACKING') == '1':
+    print('Task fake-task is already tracking OPE-1 (run private-run)', file=sys.stderr)
+    raise SystemExit(1)
 """,
             encoding="utf-8",
         )
@@ -119,10 +132,32 @@ class PluginManifestTests(unittest.TestCase):
         hook = json.loads((PLUGIN_ROOT / "hooks/hooks.json").read_text())
 
         self.assertEqual(manifest["name"], PLUGIN_ROOT.name)
-        self.assertEqual(manifest["version"], "1.1.5")
+        self.assertEqual(manifest["version"], "1.2.0")
         self.assertEqual(manifest["license"], "MIT")
-        self.assertNotIn("skills", manifest)
-        self.assertFalse((PLUGIN_ROOT / "skills").exists())
+        self.assertEqual(
+            manifest["interface"]["displayName"], "Multica Codex Sync"
+        )
+        self.assertEqual(manifest["skills"], "./skills/")
+        skill_root = PLUGIN_ROOT / "skills" / "multica-sync"
+        self.assertEqual(
+            sorted((PLUGIN_ROOT / "skills").glob("*/SKILL.md")),
+            [skill_root / "SKILL.md"],
+        )
+        skill_text = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("name: multica-sync", skill_text)
+        self.assertIn("multica_codex_track.py", skill_text)
+        self.assertIn("CODEX_THREAD_ID", skill_text)
+        self.assertIn("bind <issue-number>", skill_text)
+        self.assertIn("OPE-<issue-number>", skill_text)
+        self.assertNotIn("normalize the issue to `OPE-4158`", skill_text)
+        self.assertNotIn("$multica-codex-sync:", skill_text)
+        self.assertIn("/multica <issue-number>", skill_text)
+        self.assertIn("Do not resubmit", skill_text)
+        openai_yaml = (skill_root / "agents" / "openai.yaml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('display_name: "Multica Sync"', openai_yaml)
+        self.assertNotIn("default_prompt:", openai_yaml)
         self.assertEqual(
             manifest["repository"],
             "https://github.com/zhongwangquan/multica-agent-sync",
@@ -207,7 +242,13 @@ class PluginManifestTests(unittest.TestCase):
 
 class PluginHookTests(unittest.TestCase):
     def test_start_forms_target_the_exact_task(self) -> None:
-        for command in ("/multica 4158", "/multica-4158", "/multica OPE-4158"):
+        for command in (
+            "/multica 4158",
+            "/multica-4158",
+            "/multica OPE-4158",
+            "/multica bind 4158",
+            "/multica start 4158",
+        ):
             with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
                 sandbox = PluginSandbox(Path(directory))
                 result, arguments = sandbox.run_hook(
@@ -219,6 +260,10 @@ class PluginHookTests(unittest.TestCase):
                     ["start", "OPE-4158", "--session", "task-exact"],
                 )
                 output = json.loads(result.stdout)
+                self.assertEqual(
+                    output["systemMessage"],
+                    "已连接 OPE-4158，Multica 跟踪已开启。",
+                )
                 self.assertEqual(
                     output["hookSpecificOutput"]["hookEventName"],
                     "UserPromptSubmit",
@@ -237,8 +282,8 @@ class PluginHookTests(unittest.TestCase):
         cases = {
             "/multica stop": ["stop", "current-task"],
             "/multica-stop": ["stop", "current-task"],
-            "/multica status": ["status"],
-            "/multica-status": ["status"],
+            "/multica status": ["status", "current-task"],
+            "/multica-status": ["status", "current-task"],
         }
         for command, expected in cases.items():
             with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
@@ -249,11 +294,35 @@ class PluginHookTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(json.loads(arguments.read_text()), expected)
                 output = json.loads(result.stdout)
-                self.assertEqual(output["decision"], "block")
+                if "stop" in command:
+                    self.assertEqual(
+                        output,
+                        {
+                            "decision": "block",
+                            "reason": "已停止当前 Codex 会话的 Multica 跟踪。",
+                        },
+                    )
+                    self.assertEqual(
+                        result.stdout.count(
+                            "已停止当前 Codex 会话的 Multica 跟踪。"
+                        ),
+                        1,
+                    )
+                    self.assertNotIn("systemMessage", output)
+                    self.assertNotIn("stopReason", output)
+                else:
+                    self.assertEqual(output["decision"], "block")
+                    self.assertIn(
+                        "当前 Codex ↔ Multica 链接状态",
+                        output["reason"],
+                    )
                 self.assertNotIn("hookSpecificOutput", output)
 
     def test_help_supports_space_and_hyphen_forms_without_running_cli(self) -> None:
-        for command in ("/multica help", "/multica-help"):
+        for command in (
+            "/multica help",
+            "/multica-help",
+        ):
             with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
                 sandbox = PluginSandbox(Path(directory))
                 result, arguments = sandbox.run_hook({"prompt": command})
@@ -268,7 +337,10 @@ class PluginHookTests(unittest.TestCase):
                 self.assertNotIn("cleanup", reason.lower())
 
     def test_doctor_supports_space_and_hyphen_forms_and_redacts_paths(self) -> None:
-        for command in ("/multica doctor", "/multica-doctor"):
+        for command in (
+            "/multica doctor",
+            "/multica-doctor",
+        ):
             with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
                 sandbox = PluginSandbox(Path(directory))
                 result, arguments = sandbox.run_hook({"prompt": command})
@@ -278,7 +350,7 @@ class PluginHookTests(unittest.TestCase):
                 self.assertEqual(output["decision"], "block")
                 self.assertNotIn("hookSpecificOutput", output)
                 reason = output["reason"]
-                self.assertIn("version: 1.1.5", reason)
+                self.assertIn("version: 1.2.0", reason)
                 self.assertIn("multica_login: ready", reason)
                 self.assertIn("auth_config_source: multica", reason)
                 self.assertIn("active_trackers: 2", reason)
@@ -310,6 +382,17 @@ class PluginHookTests(unittest.TestCase):
             "/multica-cleanup",
             "/multica dev",
             "/multica-dev",
+            "$multica-codex-sync:other status",
+            "$multica-codex-sync:multica-sync 4158",
+            "$multica-codex-sync:multica-sync bind 4158",
+            "$multica-codex-sync:multica-sync status",
+            "$multica-codex-sync:multica-sync stop",
+            "$multica-codex-sync:multica-sync help",
+            "$multica-codex-sync:multica-sync doctor",
+            "$multica-codex-sync:multica-sync cleanup",
+            "[$multica-codex-sync\\:multica-sync](/tmp/plugin/skills/multica-sync/SKILL.md) status",
+            "[$multica-codex-sync\\:multica-sync](/tmp/plugin/skills/other/SKILL.md) status",
+            "[$multica-codex-sync\\:other](/tmp/plugin/skills/multica-sync/SKILL.md) status",
             "please run /multica 9",
             "explain this\n/multica 9",
         )
@@ -324,13 +407,54 @@ class PluginHookTests(unittest.TestCase):
                 self.assertFalse(arguments.exists())
 
     def test_missing_task_id_fails_closed(self) -> None:
-        for command in ("/multica 9", "/multica stop"):
+        for command in (
+            "/multica 9",
+            "/multica status",
+            "/multica stop",
+        ):
             with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
                 sandbox = PluginSandbox(Path(directory))
                 result, arguments = sandbox.run_hook({"prompt": command})
                 self.assertEqual(result.returncode, 0)
                 self.assertFalse(arguments.exists())
-                self.assertEqual(json.loads(result.stdout)["decision"], "block")
+                output = json.loads(result.stdout)
+                self.assertEqual(output["decision"], "block")
+                self.assertIn("无法确认当前 Codex Thread ID", output["reason"])
+
+    def test_duplicate_start_for_same_issue_keeps_existing_tracker(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            sandbox = PluginSandbox(Path(directory))
+            result, _arguments = sandbox.run_hook(
+                {"prompt": "/multica-88", "session_id": "task-rebind"},
+                {
+                    "FAKE_START_ALREADY_TRACKING": "1",
+                    "FAKE_TRACKER_SESSION": "task-rebind",
+                    "FAKE_TRACKER_ISSUE": "OPE-88",
+                },
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads(result.stdout)
+            self.assertIn("hookSpecificOutput", output)
+            self.assertIn("OPE-88", output["hookSpecificOutput"]["additionalContext"])
+
+    def test_duplicate_start_for_different_issue_requires_explicit_rebind(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            sandbox = PluginSandbox(Path(directory))
+            result, _arguments = sandbox.run_hook(
+                {"prompt": "/multica-88", "session_id": "task-rebind"},
+                {
+                    "FAKE_START_ALREADY_TRACKING": "1",
+                    "FAKE_TRACKER_SESSION": "task-rebind",
+                    "FAKE_TRACKER_ISSUE": "OPE-7",
+                },
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads(result.stdout)
+            self.assertEqual(output["decision"], "block")
+            self.assertIn("未自动停止原跟踪", output["reason"])
+            self.assertIn("/multica stop", output["reason"])
+            self.assertIn("/multica 88", output["reason"])
+            self.assertNotIn("OPE-7", output["reason"])
 
     def test_nested_supported_payload_fields_are_read(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -378,7 +502,7 @@ class PluginHookTests(unittest.TestCase):
 
     def test_status_formatter_shows_only_current_task(self) -> None:
         payload = {
-            "plugin_version": "1.1.5",
+            "plugin_version": "1.2.0",
             "trackers": [
                 {
                     "issue": "OPE-1",
@@ -400,6 +524,29 @@ class PluginHookTests(unittest.TestCase):
         self.assertIn("OPE-1", text)
         self.assertNotIn("OPE-2", text)
         self.assertNotIn("other-task", text)
+
+    def test_tracker_for_session_returns_only_the_exact_task(self) -> None:
+        payload = {
+            "trackers": [
+                {"issue": "OPE-1", "session_id": "other-task"},
+                {"issue": "OPE-2", "session_id": "current-task"},
+            ]
+        }
+        tracker = prompt_submit.tracker_for_session(payload, "current-task")
+        self.assertEqual(tracker, {"issue": "OPE-2", "session_id": "current-task"})
+        self.assertIsNone(prompt_submit.tracker_for_session(payload, "missing-task"))
+
+    def test_only_multica_sync_skill_chip_is_control_text(self) -> None:
+        chip = (
+            "[$multica-codex-sync\\:multica-sync]"
+            "(/tmp/plugin/skills/multica-sync/SKILL.md) status"
+        )
+        self.assertTrue(codex_adapter.is_skill_control_text(chip))
+        self.assertFalse(
+            codex_adapter.is_skill_control_text(
+                "$multica-codex-sync:multica-sync status"
+            )
+        )
 
     def test_control_messages_are_not_uploaded(self) -> None:
         class RecordingApi:
@@ -423,6 +570,7 @@ class PluginHookTests(unittest.TestCase):
             "/multica stop",
             "/multica help",
             "/multica doctor",
+            "[$multica-codex-sync\\:multica-sync](/tmp/plugin/skills/multica-sync/SKILL.md) status",
         ):
             with self.subTest(command=command):
                 entry = {
@@ -439,6 +587,13 @@ class PluginHookTests(unittest.TestCase):
 
 
 class PluginFileSafetyTests(unittest.TestCase):
+    def test_targeted_status_without_tracker_returns_empty_json(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            sandbox = PluginSandbox(Path(directory))
+            result = sandbox.run_cli("status", "current-task")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["trackers"], [])
+
     def test_cli_falls_back_to_codex_managed_plugin_data(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             sandbox = PluginSandbox(Path(directory))
@@ -764,7 +919,7 @@ class PluginLifecycleTests(unittest.TestCase):
             )
             self.assertEqual(payload["auth_config_source"], "multica")
             self.assertTrue(payload["plugin_data_private"])
-            self.assertEqual(payload["plugin_version"], "1.1.5")
+            self.assertEqual(payload["plugin_version"], "1.2.0")
 
     def test_doctor_falls_back_to_wujie_login_without_printing_token(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

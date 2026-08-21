@@ -28,8 +28,17 @@ def main() -> int:
     )
     require(manifest.get("version") == version, "manifest and VERSION differ")
     require(manifest.get("name") == "multica-codex-sync", "unexpected plugin name")
-    require("skills" not in manifest, "runtime controls must not be bundled Skills")
-    require(not (PLUGIN / "skills").exists(), "runtime Skill directory must be absent")
+    require(manifest.get("skills") == "./skills/", "unexpected plugin skills path")
+    skill_root = PLUGIN / "skills" / "multica-sync"
+    bundled_skills = sorted((PLUGIN / "skills").glob("*/SKILL.md"))
+    require(
+        bundled_skills == [skill_root / "SKILL.md"],
+        "plugin must bundle only the multica-sync Skill",
+    )
+    require(
+        (skill_root / "agents" / "openai.yaml").is_file(),
+        "multica-sync Skill is missing UI metadata",
+    )
     require(marketplace.get("name") == "multica-agent-sync", "unexpected marketplace name")
     require(len(marketplace.get("plugins", [])) == 1, "marketplace must expose one plugin")
     require(
@@ -62,6 +71,7 @@ def main() -> int:
         lines = text.splitlines()
         require("multica-agent-sync" in text, f"missing public install source in {readme.name}")
         require("/multica status" in text, f"missing command docs in {readme.name}")
+        require("/multica-sync" in text, f"missing optional Skill docs in {readme.name}")
         require(
             default_marketplace_command in lines,
             f"default install must omit --ref in {readme.name}",
@@ -79,6 +89,17 @@ def main() -> int:
         )
         for label in command_labels:
             require(label in text, f"missing command annotation {label} in {readme.name}")
+
+    for markdown_path in ROOT.rglob("*.md"):
+        markdown = markdown_path.read_text(encoding="utf-8")
+        require(
+            "$multica-codex-sync:" not in markdown,
+            f"internal Skill invocation leaked into {markdown_path.relative_to(ROOT)}",
+        )
+        require(
+            "wujie" not in markdown.lower(),
+            f"provider-specific fallback leaked into {markdown_path.relative_to(ROOT)}",
+        )
 
     channels = (ROOT / "docs" / "release-channels.md").read_text(encoding="utf-8")
     for expected in (

@@ -4,16 +4,15 @@ The current product is a Codex plugin with one host adapter and one Multica
 transport.
 
 ```text
-Codex UserPromptSubmit Hook
-          |
-          v
-command parser ----> lifecycle CLI ----> Multica local-run API
-                          |
-                          v
-                 Codex rollout adapter
-                          |
-                          v
-               private tracker state/logs
+/multica Hook ----------------> lifecycle CLI ----> Multica local-run API
+                                  |
+bundled multica-sync Skill -------+
+                                  |
+                                  v
+                         Codex rollout adapter
+                                  |
+                                  v
+                       private tracker state/logs
 ```
 
 ## Components
@@ -30,11 +29,17 @@ command parser ----> lifecycle CLI ----> Multica local-run API
 - `scripts/multica_codex_sync/cli.py` owns tracker lifecycle, status, doctor,
   and conservative cleanup.
 
-The plugin does not bundle runtime Skills. Fixed control commands (`status`,
-`stop`, `help`, and `doctor`) return Hook `decision: block` output before a
-model turn starts. The issue-binding command is different by design: it starts
-the tracker and continues the prompt with exact issue context so Codex can do
-the bound work.
+The recommended user entry point is the `/multica` namespace handled by the
+`UserPromptSubmit` Hook. The plugin also bundles one `multica-sync` Skill as an
+integration path. It invokes the lifecycle CLI directly in the agent turn and
+uses `CODEX_THREAD_ID` for exact task-scoped status, stop, and binding
+operations. The Hook does not intercept Skill chips or explicit Skill
+invocations.
+
+Users trigger the Skill as `/multica-sync` through the Codex `/` picker. Its
+distinct name leaves `/multica` available for manual Hook commands. Any
+host-generated invocation encoding is an internal integration detail, not a
+public command interface.
 
 ## Extension boundary
 

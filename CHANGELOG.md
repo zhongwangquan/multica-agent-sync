@@ -3,27 +3,34 @@
 All notable changes are documented here. This project follows Semantic
 Versioning.
 
-## Unreleased
+## 1.2.0 - 2026-08-21
+
+### Added
+
+- Bundle one `/multica-sync` action Skill for Codex integration while
+  keeping `/multica` commands as the recommended user entry point.
 
 ### Changed
 
 - Use `main` as the repository's only long-lived branch and remove the
   `develop` release channel from contributor and installation guidance.
 
+### Fixed
+
+- Detect when a Codex task is already tracking a different issue and show an
+  explicit, non-automatic rebind sequence instead of injecting the newly
+  requested issue context.
+- Return the stop confirmation through the same visible UserPromptSubmit result
+  path as the other informational chat commands.
+- Scope status and rebind checks to the exact current Codex task, and refuse
+  task-scoped commands when the task id is unavailable.
+
 ## 1.1.5 - 2026-08-21
-
-### Added
-
-- Keep Multica configuration discovery as the default while accepting
-  authenticated Wujie configuration as a compatibility fallback, and instruct
-  bound Codex tasks to use Wujie issue commands only when `multica` is
-  unavailable.
 
 ### Fixed
 
-- Retry a permanently redirected Multica request only when the redirect origin
-  matches the locally configured Wujie endpoint, using the Wujie token without
-  forwarding Multica credentials.
+- Harden configuration discovery and redirected requests so credentials are
+  never forwarded to an untrusted origin.
 - Replace the failing third-party Star History README chart with native GitHub
   activity links.
 

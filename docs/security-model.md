@@ -5,8 +5,7 @@
 - Codex supplies `PLUGIN_ROOT`, `PLUGIN_DATA`, the trusted Hook definition, and
   the exact current task id.
 - The user explicitly Trusts the Hook in Codex Settings.
-- Authentication is read from existing Multica configuration first, with
-  existing Wujie configuration accepted only as a compatibility fallback.
+- Authentication is read from existing local configuration.
 
 ## Untrusted inputs
 
@@ -26,9 +25,7 @@ payloads.
 - State directories use mode `0700`; files and logs use `0600`.
 - API tokens are passed through a private temporary curl configuration, not
   command-line arguments, and the temporary file is removed.
-- A permanent redirect from the selected Multica endpoint is retried only when
-  its origin matches the locally configured Wujie endpoint. The retry uses the
-  Wujie token; Multica credentials are never forwarded through the redirect.
+- Credentials are never forwarded to an untrusted redirect origin.
 - External run ids are hashed before becoming filenames.
 - Session locks are keyed by a hash of the task id.
 - Symlinked private state directories are rejected.
@@ -41,7 +38,7 @@ payloads.
 Normal cleanup stops matching trackers and preserves all state and logs. An
 explicit purge validates a plugin-specific ownership marker and removes only
 known state, log, lock, and temporary filename patterns. Symlinks and unknown
-files are preserved and reported. The plugin never removes Multica or Wujie
+files are preserved and reported. The plugin never removes Multica
 configuration, Codex tasks, shared Hook configuration, or an enclosing user
 directory.
 

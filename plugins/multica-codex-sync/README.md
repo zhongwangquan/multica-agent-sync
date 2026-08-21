@@ -1,4 +1,4 @@
-# Multica Codex Sync 1.1
+# Multica Codex Sync 1.2
 
 English | [简体中文](README.zh-CN.md)
 
@@ -8,35 +8,35 @@ and continuously syncs new visible messages and token usage.
 ## Setup
 
 Install through the repository marketplace as described in the
-[project README](../../README.md). Fully restart Codex Desktop, open
-**Settings → Hooks**, review the `UserPromptSubmit` command, click **Trust**,
-enable it, and start a new task. Hook trust cannot and should not be automated.
+[project README](../../README.md). Fully restart Codex Desktop, enable and trust
+the plugin Hook in Settings, then start a new task. Hook Trust cannot be
+automated.
 
-The plugin requires Python 3, `curl`, and an authenticated Multica CLI by
-default. An authenticated Wujie CLI is accepted as a compatibility fallback.
-Configuration discovery checks Multica first, then Wujie; the chat command
-namespace remains `/multica`.
+The plugin requires Python 3, `curl`, and an authenticated Multica CLI. The
+chat command namespace is `/multica`.
 
-## Chat commands
+## Use
 
-Commands must begin the first line:
+### Recommended: `/multica` commands
 
-```text
-/multica 4158
-/multica status
-/multica stop
-/multica help
-/multica doctor
-```
+Type `/multica 4158`, `/multica status`, `/multica stop`, `/multica help`, or
+`/multica doctor` at the beginning of the first line. The issue number is an
+example. Hyphen forms such as `/multica-4158` are also supported.
 
-Equivalent hyphen forms are `/multica-4158`, `/multica-status`,
-`/multica-stop`, `/multica-help`, and `/multica-doctor`. No other command
-namespace is recognized.
+### Optional: `/multica-sync` Skill
 
-These are Hook commands, not Skills. Status, stop, help, and doctor are handled
-before the prompt reaches the model. Issue binding intentionally continues into
-the model after the Hook injects the exact issue context. Type the command text
-directly; no Multica runtime entries are added to the Skill picker.
+Type `/multica-sync`, choose **Multica Sync**, and enter `4158`, `bind 4158`,
+`status`, `stop`, `help`, or `doctor`. No internal invocation syntax is needed.
+
+| Difference | `/multica` commands | `/multica-sync` Skill |
+| --- | --- | --- |
+| Positioning | Recommended | Optional |
+| Input | Complete command on the first line | Type `/multica-sync`, choose **Multica Sync**, then enter the action |
+| Hook Trust | Required | Not required |
+| Result | Fixed controls complete immediately; binding continues with issue context | Runs the action in an Agent turn |
+
+Each Codex task can track only one issue. To switch issues, stop the current
+tracking first, then bind the new issue in a separate action.
 
 ## Privacy and safety
 
@@ -47,6 +47,6 @@ not appear in process arguments or logs.
 
 Internal cleanup code validates the plugin ownership marker and tracker process
 identity. The public plugin exposes no cleanup/purge chat command. It does not
-replace the Multica or Wujie CLI, edit Hook configuration, alter Hook trust, or
-delete unknown data. See the repository
+replace the Multica CLI, edit Hook configuration, alter Hook trust, or delete
+unknown data. See the repository
 [security model](../../docs/security-model.md).

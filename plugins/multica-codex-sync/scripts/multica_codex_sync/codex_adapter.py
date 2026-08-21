@@ -136,12 +136,24 @@ def is_informational_command_text(text: str) -> bool:
     )
 
 
+def is_skill_control_text(text: str) -> bool:
+    """Recognize the multica-sync Skill chip without executing it in a Hook."""
+    first_line = (text or "").strip().splitlines()[0] if (text or "").strip() else ""
+    prefix = (
+        r"\[\$multica-codex-sync\\?:multica-sync\]"
+        r"\([^\r\n)]*/skills/multica-sync/SKILL\.md\)"
+    )
+    action = r"(?:(?:bind\s+)?(?:OPE-)?[0-9]+|status|stop|help|doctor)"
+    return bool(re.match(rf"^{prefix}\s+{action}(?:\s|$)", first_line, re.IGNORECASE))
+
+
 def is_control_command_text(text: str) -> bool:
     return (
         is_track_command_text(text)
         or is_stop_command_text(text)
         or is_status_command_text(text)
         or is_informational_command_text(text)
+        or is_skill_control_text(text)
     )
 
 

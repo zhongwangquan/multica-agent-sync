@@ -18,7 +18,7 @@ local run。
 
 - 通过 Codex 插件管理器安装、升级和移除。
 - Hook 跟随插件加载，安装器不修改用户 Hook 文件。
-- 不替换、不包裹 `multica` 或 `wujie` 命令。
+- 不替换、不包裹 `multica` 命令。
 - 运行状态保存在 Codex 提供的 `$PLUGIN_DATA`，并使用当前用户私有权限。
 - 清理前会核对归属、进程身份和已知文件名；未知文件一律保留。
 - 源码、版本、Issue 和 PR 都可以在 GitHub 审查与追踪。
@@ -27,8 +27,7 @@ local run。
 
 - macOS，以及支持插件的 Codex Desktop。
 - Python 3、`curl`。
-- 默认使用已安装并登录的 Multica CLI；也兼容已登录的 Wujie CLI。
-  插件会先检查 Multica 配置，再回退到 Wujie 配置，不输出 access token。
+- 已安装并登录的 Multica CLI。插件不输出 access token。
 
 ## 安装
 
@@ -47,7 +46,7 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 ```bash
 # 可选第 1/2 步：指定准确版本，而不是使用最新稳定版。
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.5
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.2.0
 
 # 第 2/2 步：安装并启用这个准确版本。
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -59,16 +58,17 @@ GitHub Release 也会自动提供源码压缩包。
 安装后：
 
 1. 完整退出并重新打开 Codex Desktop。
-2. 打开 **设置 → Hooks**。
-3. 核对本插件的 `UserPromptSubmit` 命令，点击 **Trust** 并打开开关。这是
-   Codex 要求保留的人工安全确认。
-4. 新建一个 Codex 任务。
+2. 打开 **设置 → Hooks**，核对本插件的 `UserPromptSubmit` 命令，
+   点击 **Trust** 并开启。这是 Codex 要求保留的人工安全确认。
+3. 新建 Codex 任务，发送 `/multica ...` 指令。
 
 不要在聊天框输入 `/hooks`；Hook 的 Trust 操作在设置页完成。
 
 ## 使用
 
-把命令放在第一行开头：
+### 推荐：`/multica` 指令
+
+把一条指令放在聊天内容的第一行开头：
 
 ```text
 /multica 4158
@@ -78,31 +78,40 @@ GitHub Release 也会自动提供源码压缩包。
 /multica doctor
 ```
 
-也支持连字符形式：
+`4158` 只是 issue 编号示例。也支持 `/multica-4158`、
+`/multica-status` 等连字符形式。
+
+### 可选：`/multica-sync` Skill
+
+输入 `/multica-sync`，选择 **Multica Sync**，输入一个动作后发送：
 
 ```text
-/multica-4158
-/multica-status
-/multica-stop
-/multica-help
-/multica-doctor
+4158
+bind 4158
+status
+stop
+help
+doctor
 ```
 
-插件只识别 `/multica` 命名空间，不占用容易和 Codex 功能、模板或其他插件
-冲突的通用 issue、stop 命令。
+不需要输入内部调用格式。
 
-运行时发现仍以 Multica 为默认：先读取 `MULTICA_HOME` 或 `~/.multica`，
-只在没有有效 Multica 配置时才回退到 `WUJIE_HOME` 或 `~/.wujie`。
-注入的 Issue CLI 上下文会请求 Codex 优先使用 `multica`，仅在该命令不可用时
-回退到 `wujie`。如果选中的 Multica 端点返回永久重定向，且目标 origin 与本机
-Wujie 配置一致，插件才会使用 Wujie 配置和它自己的 token 重试一次。
-Multica 凭据不会被透传到重定向目标，未匹配本地配置的 origin 会被拒绝。
+| 区别 | `/multica` 指令 | `/multica-sync` Skill |
+| --- | --- | --- |
+| 定位 | 推荐 | 可选 |
+| 输入方式 | 在第一行输入完整指令 | 输入 `/multica-sync`，选择 **Multica Sync** 后输入动作 |
+| Hook Trust | 需要 | 不需要 |
+| 执行效果 | 状态、停止、帮助和诊断直接完成；绑定会携带 issue 上下文继续 | 选中的动作会在 Agent 回合中执行 |
 
-这些都是 Hook 直接指令，不是 Plugin 内置 Skill。`/multica status`、
-`/multica stop`、`/multica help` 和 `/multica doctor` 会在 prompt 进入模型前
-被拦截，不会启动一次模型驱动的 Skill 回合。`/multica 4158` 会先启动跟踪，再按
-设计携带 issue 上下文继续当前模型任务。这些指令不会出现在 Skill 列表中，需要在
-聊天框直接输入完整文本。
+Hook 只识别 `/multica` 命名空间。独立的 `/multica-sync` 名称属于
+可选 Skill，因此用户仍可以手动输入 `/multica` 指令。插件不占用容易和
+Codex 功能、模板或其他插件冲突的通用 issue、stop 命令。
+
+身份信息从 `MULTICA_HOME` 或 `~/.multica` 读取。凭据不会被透传到
+不可信的重定向 origin。
+
+每个 Codex 任务只能跟踪一个 Multica issue。如需换绑，先发送
+`/multica stop`，再单独发送新的 issue 编号。插件不会自动换绑。
 
 ## 升级
 
@@ -111,7 +120,7 @@ Multica 凭据不会被透传到重定向目标，未匹配本地配置的 origi
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
 | 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
-| `v1.1.5` | 可选固定版本 | 始终保持在该版本 |
+| `v1.2.0` | 可选固定版本 | 始终保持在该版本 |
 
 上面的默认安装即跟随稳定通道。在 Codex Desktop 中打开
 **设置 → Plugins → Marketplaces**，找到 **Multica Agent Sync** 并点击

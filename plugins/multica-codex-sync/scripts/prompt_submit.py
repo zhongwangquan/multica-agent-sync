@@ -22,25 +22,26 @@ PLUGIN_DATA = resolve_plugin_data()
 LOG_PATH = PLUGIN_DATA / "hook.log"
 TRACK_COMMAND = PLUGIN_ROOT / "scripts" / "multica_codex_track.py"
 MULTICA_COMMAND_TIMEOUT_SECONDS = 20
+COMMAND_PREFIX = r"/multica"
 
 START_RE = re.compile(
-    r"^\s*/multica(?:-|\s+)(?:OPE-)?([0-9]+)(?:\s|$)",
+    rf"^\s*{COMMAND_PREFIX}(?:-|\s+)(?:(?:bind|start)\s+)?(?:OPE-)?([0-9]+)(?:\s|$)",
     re.IGNORECASE,
 )
 STOP_RE = re.compile(
-    r"^\s*/multica(?:-|\s+)stop(?:\s|$)",
+    rf"^\s*{COMMAND_PREFIX}(?:-|\s+)stop(?:\s|$)",
     re.IGNORECASE,
 )
 STATUS_RE = re.compile(
-    r"^\s*/multica(?:-|\s+)status(?:\s|$)",
+    rf"^\s*{COMMAND_PREFIX}(?:-|\s+)status(?:\s|$)",
     re.IGNORECASE,
 )
 HELP_RE = re.compile(
-    r"^\s*/multica(?:-|\s+)help(?:\s|$)",
+    rf"^\s*{COMMAND_PREFIX}(?:-|\s+)help(?:\s|$)",
     re.IGNORECASE,
 )
 DOCTOR_RE = re.compile(
-    r"^\s*/multica(?:-|\s+)doctor(?:\s|$)",
+    rf"^\s*{COMMAND_PREFIX}(?:-|\s+)doctor(?:\s|$)",
     re.IGNORECASE,
 )
 
@@ -155,11 +156,14 @@ def format_status_payload(payload: Any, current_session_id: str) -> str:
     if not isinstance(payload, dict):
         return "Multica 状态返回格式异常。"
     trackers = payload.get("trackers") if isinstance(payload.get("trackers"), list) else []
-    if current_session_id:
-        trackers = [
-            item for item in trackers
-            if isinstance(item, dict) and item.get("session_id") == current_session_id
-        ]
+    trackers = [
+        item for item in trackers
+        if (
+            current_session_id
+            and isinstance(item, dict)
+            and item.get("session_id") == current_session_id
+        )
+    ]
 
     lines = ["当前 Codex ↔ Multica 链接状态："]
     if not trackers:
@@ -202,7 +206,7 @@ def continue_with_issue_context(issue_key: str, status: str) -> None:
     context = (
         f"Multica Codex Sync status: {status}. "
         f"This Codex session is bound to Multica issue {issue_key}. "
-        "Treat the user's /multica command as a task binding, not as a request to search the repo blindly. "
+        "Treat the user's Multica control invocation as a task binding, not as a request to search the repo blindly. "
         "The hook system message has already shown the connection status. "
         "Do not repeat a visible connected banner in normal responses unless the user asks for link status. "
         f"Before inspecting or changing repository files, first run `multica issue get {issue_key} --output json` "
@@ -303,6 +307,32 @@ def run_tracker(args: list[str]) -> subprocess.CompletedProcess[str]:
         return subprocess.CompletedProcess(command, 1, "", str(error))
 
 
+def tracker_for_session(payload: Any, session_id: str) -> dict[str, Any] | None:
+    """Return the active tracker for one exact Codex task without exposing others."""
+    if not session_id or not isinstance(payload, dict):
+        return None
+    trackers = payload.get("trackers")
+    if not isinstance(trackers, list):
+        return None
+    for tracker in trackers:
+        if isinstance(tracker, dict) and tracker.get("session_id") == session_id:
+            return tracker
+    return None
+
+
+def rebind_message(issue_key: str) -> str:
+    return "\n".join(
+        (
+            "当前 Codex 任务已经跟踪另一个 Multica issue。",
+            "未自动停止原跟踪，也没有为同一任务创建第二个 tracker。",
+            "",
+            f"如需改绑到 {issue_key}，请明确按以下顺序发送：",
+            "/multica stop",
+            f"/multica {issue_key.removeprefix('OPE-')}",
+        )
+    )
+
+
 def main() -> int:
     raw = sys.stdin.read()
     if not raw.strip():
@@ -349,7 +379,13 @@ def main() -> int:
         return 0
 
     if status_match:
-        result = run_tracker(["status"])
+        if not session_id:
+            block(
+                "无法确认当前 Codex Thread ID，未执行状态查询。"
+                "请重启 Codex Desktop 后再试。"
+            )
+            return 0
+        result = run_tracker(["status", session_id])
         log(f"status session={session_id or '-'} rc={result.returncode}")
         if result.returncode != 0:
             detail = (result.stderr or result.stdout or "status failed").strip()
@@ -392,7 +428,22 @@ def main() -> int:
     else:
         detail = (result.stderr or result.stdout or "").strip()
         if "already tracking" in detail:
-            continue_with_issue_context(issue_key, "already tracking")
+            status_result = run_tracker(["status", session_id])
+            try:
+                current = tracker_for_session(
+                    json.loads(status_result.stdout or "{}"), session_id
+                )
+            except json.JSONDecodeError:
+                current = None
+            if current is not None and current.get("issue") == issue_key:
+                continue_with_issue_context(issue_key, "already tracking")
+            elif current is not None:
+                block(rebind_message(issue_key))
+            else:
+                block(
+                    "Multica 已报告当前任务正在跟踪 issue，但无法安全确认当前绑定。"
+                    "未执行换绑；请先发送 /multica status。"
+                )
         else:
             block(f"Multica 跟踪启动失败：{detail or 'unknown error'}")
     return 0

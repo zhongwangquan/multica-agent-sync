@@ -226,9 +226,6 @@ def status(args) -> int:
     matches = select_states(args.target) if args.target else (
         load_states() if args.all else active_states()
     )
-    if not matches and args.target:
-        print("No Codex Desktop trackers were found")
-        return 0
     states = []
     for state_path, state in matches:
         value = dict(state)
