@@ -22,6 +22,8 @@ Versioning.
   requested issue context.
 - Emit one visible stop result through the UserPromptSubmit stop path without
   rendering duplicate success cards.
+- Scope status and rebind checks to the exact current Codex task, and refuse
+  task-scoped commands when the task id is unavailable.
 
 ## 1.1.5 - 2026-08-21
 

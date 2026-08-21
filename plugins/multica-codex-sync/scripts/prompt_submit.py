@@ -170,11 +170,14 @@ def format_status_payload(payload: Any, current_session_id: str) -> str:
     if not isinstance(payload, dict):
         return "Multica 状态返回格式异常。"
     trackers = payload.get("trackers") if isinstance(payload.get("trackers"), list) else []
-    if current_session_id:
-        trackers = [
-            item for item in trackers
-            if isinstance(item, dict) and item.get("session_id") == current_session_id
-        ]
+    trackers = [
+        item for item in trackers
+        if (
+            current_session_id
+            and isinstance(item, dict)
+            and item.get("session_id") == current_session_id
+        )
+    ]
 
     lines = ["当前 Codex ↔ Multica 链接状态："]
     if not trackers:
@@ -390,7 +393,13 @@ def main() -> int:
         return 0
 
     if status_match:
-        result = run_tracker(["status"])
+        if not session_id:
+            block(
+                "无法确认当前 Codex Thread ID，未执行状态查询。"
+                "请重启 Codex Desktop 后再试。"
+            )
+            return 0
+        result = run_tracker(["status", session_id])
         log(f"status session={session_id or '-'} rc={result.returncode}")
         if result.returncode != 0:
             detail = (result.stderr or result.stdout or "status failed").strip()
@@ -433,7 +442,7 @@ def main() -> int:
     else:
         detail = (result.stderr or result.stdout or "").strip()
         if "already tracking" in detail:
-            status_result = run_tracker(["status"])
+            status_result = run_tracker(["status", session_id])
             try:
                 current = tracker_for_session(
                     json.loads(status_result.stdout or "{}"), session_id

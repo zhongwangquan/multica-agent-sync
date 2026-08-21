@@ -68,10 +68,11 @@ import os
 import sys
 from pathlib import Path
 Path(os.environ['ARGUMENTS_PATH']).write_text(json.dumps(sys.argv[1:]), encoding='utf-8')
-if sys.argv[1:] == ['status']:
+if sys.argv[1:] and sys.argv[1] == 'status':
+    target = sys.argv[2] if len(sys.argv) == 3 else ''
     session_id = os.environ.get('FAKE_TRACKER_SESSION', '')
     trackers = []
-    if session_id:
+    if session_id and (not target or target == session_id):
         trackers.append({
             'issue': os.environ.get('FAKE_TRACKER_ISSUE', 'OPE-1'),
             'session_id': session_id,
@@ -245,6 +246,8 @@ class PluginHookTests(unittest.TestCase):
             "/multica 4158",
             "/multica-4158",
             "/multica OPE-4158",
+            "/multica bind 4158",
+            "/multica start 4158",
         ):
             with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
                 sandbox = PluginSandbox(Path(directory))
@@ -257,6 +260,10 @@ class PluginHookTests(unittest.TestCase):
                     ["start", "OPE-4158", "--session", "task-exact"],
                 )
                 output = json.loads(result.stdout)
+                self.assertEqual(
+                    output["systemMessage"],
+                    "已连接 OPE-4158，Multica 跟踪已开启。",
+                )
                 self.assertEqual(
                     output["hookSpecificOutput"]["hookEventName"],
                     "UserPromptSubmit",
@@ -275,8 +282,8 @@ class PluginHookTests(unittest.TestCase):
         cases = {
             "/multica stop": ["stop", "current-task"],
             "/multica-stop": ["stop", "current-task"],
-            "/multica status": ["status"],
-            "/multica-status": ["status"],
+            "/multica status": ["status", "current-task"],
+            "/multica-status": ["status", "current-task"],
         }
         for command, expected in cases.items():
             with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
@@ -301,6 +308,7 @@ class PluginHookTests(unittest.TestCase):
                     self.assertNotIn("reason", output)
                 else:
                     self.assertEqual(output["decision"], "block")
+                    self.assertIn("当前 Codex ↔ Multica 链接状态", output["reason"])
                 self.assertNotIn("hookSpecificOutput", output)
 
     def test_help_supports_space_and_hyphen_forms_without_running_cli(self) -> None:
@@ -394,6 +402,7 @@ class PluginHookTests(unittest.TestCase):
     def test_missing_task_id_fails_closed(self) -> None:
         for command in (
             "/multica 9",
+            "/multica status",
             "/multica stop",
         ):
             with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
@@ -401,7 +410,9 @@ class PluginHookTests(unittest.TestCase):
                 result, arguments = sandbox.run_hook({"prompt": command})
                 self.assertEqual(result.returncode, 0)
                 self.assertFalse(arguments.exists())
-                self.assertEqual(json.loads(result.stdout)["decision"], "block")
+                output = json.loads(result.stdout)
+                self.assertEqual(output["decision"], "block")
+                self.assertIn("无法确认当前 Codex Thread ID", output["reason"])
 
     def test_duplicate_start_for_same_issue_keeps_existing_tracker(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
