@@ -73,8 +73,9 @@ Do not type `/hooks` in the chat box; Hook trust is managed in Settings.
 
 ## Use
 
-Place one command at the beginning of the first line. You do not need to select
-or run a Skill first:
+### Recommended: `/multica` commands
+
+Place one command at the beginning of the first line:
 
 ```text
 /multica 4158
@@ -87,9 +88,27 @@ or run a Skill first:
 `4158` is an example issue number. Hyphen forms such as `/multica-4158` and
 `/multica-status` are also supported.
 
-As an optional alternative, type `/`, choose **Multica Agent**, and enter one
-action such as `4158`, `status`, `stop`, `help`, or `doctor`. No internal
-invocation syntax is needed.
+### Optional: `/` Skill picker
+
+Type `/`, choose **Multica Agent**, enter one action, and submit:
+
+```text
+4158
+bind 4158
+status
+stop
+help
+doctor
+```
+
+No internal invocation syntax is needed.
+
+| Difference | `/multica` commands | `/` Skill picker |
+| --- | --- | --- |
+| Positioning | Recommended | Optional |
+| Input | Type the complete command on the first line | Choose **Multica Agent**, then enter the action |
+| Hook Trust | Required | Not required |
+| Result | Status, stop, help, and doctor complete immediately; binding continues with issue context | The selected action runs in an Agent turn |
 
 Only the `/multica` namespace is recognized. The plugin deliberately does not
 claim generic issue or stop command names that may collide with Codex features,

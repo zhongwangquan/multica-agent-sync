@@ -71,6 +71,7 @@ def main() -> int:
         lines = text.splitlines()
         require("multica-agent-sync" in text, f"missing public install source in {readme.name}")
         require("/multica status" in text, f"missing command docs in {readme.name}")
+        require("Multica Agent" in text, f"missing optional Skill picker docs in {readme.name}")
         require(
             default_marketplace_command in lines,
             f"default install must omit --ref in {readme.name}",
@@ -88,6 +89,17 @@ def main() -> int:
         )
         for label in command_labels:
             require(label in text, f"missing command annotation {label} in {readme.name}")
+
+    for markdown_path in ROOT.rglob("*.md"):
+        markdown = markdown_path.read_text(encoding="utf-8")
+        require(
+            "$multica-codex-sync:control" not in markdown,
+            f"internal Skill invocation leaked into {markdown_path.relative_to(ROOT)}",
+        )
+        require(
+            "wujie" not in markdown.lower(),
+            f"provider-specific fallback leaked into {markdown_path.relative_to(ROOT)}",
+        )
 
     channels = (ROOT / "docs" / "release-channels.md").read_text(encoding="utf-8")
     for expected in (

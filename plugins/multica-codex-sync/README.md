@@ -17,14 +17,23 @@ chat command namespace is `/multica`.
 
 ## Use
 
+### Recommended: `/multica` commands
+
 Type `/multica 4158`, `/multica status`, `/multica stop`, `/multica help`, or
 `/multica doctor` at the beginning of the first line. The issue number is an
-example. Hyphen forms such as `/multica-4158` are also supported. You do not
-need to select or run a Skill first.
+example. Hyphen forms such as `/multica-4158` are also supported.
 
-As an optional alternative, type `/`, choose **Multica Agent**, and enter one
-action such as `4158`, `status`, `stop`, `help`, or `doctor`. No internal
-invocation syntax is needed.
+### Optional: `/` Skill picker
+
+Type `/`, choose **Multica Agent**, and enter `4158`, `bind 4158`, `status`,
+`stop`, `help`, or `doctor`. No internal invocation syntax is needed.
+
+| Difference | `/multica` commands | `/` Skill picker |
+| --- | --- | --- |
+| Positioning | Recommended | Optional |
+| Input | Complete command on the first line | Choose **Multica Agent**, then enter the action |
+| Hook Trust | Required | Not required |
+| Result | Fixed controls complete immediately; binding continues with issue context | Runs the action in an Agent turn |
 
 Each Codex task can track only one issue. To switch issues, stop the current
 tracking first, then bind the new issue in a separate action.

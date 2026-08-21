@@ -66,7 +66,9 @@ GitHub Release 也会自动提供源码压缩包。
 
 ## 使用
 
-把一条指令放在聊天内容的第一行开头。不需要先选择或触发 Skill：
+### 推荐：`/multica` 指令
+
+把一条指令放在聊天内容的第一行开头：
 
 ```text
 /multica 4158
@@ -79,9 +81,27 @@ GitHub Release 也会自动提供源码压缩包。
 `4158` 只是 issue 编号示例。也支持 `/multica-4158`、
 `/multica-status` 等连字符形式。
 
-也可以作为可选方式，输入 `/`，选择 **Multica Agent**，再输入
-`4158`、`status`、`stop`、`help` 或 `doctor` 等动作。不需要输入
-内部调用格式。
+### 可选：`/` Skill 选择器
+
+输入 `/`，选择 **Multica Agent**，输入一个动作后发送：
+
+```text
+4158
+bind 4158
+status
+stop
+help
+doctor
+```
+
+不需要输入内部调用格式。
+
+| 区别 | `/multica` 指令 | `/` Skill 选择器 |
+| --- | --- | --- |
+| 定位 | 推荐 | 可选 |
+| 输入方式 | 在第一行输入完整指令 | 选择 **Multica Agent** 后输入动作 |
+| Hook Trust | 需要 | 不需要 |
+| 执行效果 | 状态、停止、帮助和诊断直接完成；绑定会携带 issue 上下文继续 | 选中的动作会在 Agent 回合中执行 |
 
 插件只识别 `/multica` 命名空间，不占用容易和 Codex 功能、模板或其他插件
 冲突的通用 issue、stop 命令。
