@@ -287,7 +287,16 @@ class PluginHookTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(json.loads(arguments.read_text()), expected)
                 output = json.loads(result.stdout)
-                self.assertEqual(output["decision"], "block")
+                if "stop" in command:
+                    self.assertFalse(output["continue"])
+                    self.assertEqual(
+                        output["stopReason"],
+                        "已停止当前 Codex 会话的 Multica 跟踪。",
+                    )
+                    self.assertNotIn("decision", output)
+                    self.assertNotIn("reason", output)
+                else:
+                    self.assertEqual(output["decision"], "block")
                 self.assertNotIn("hookSpecificOutput", output)
 
     def test_help_supports_space_and_hyphen_forms_without_running_cli(self) -> None:

@@ -68,6 +68,16 @@ def block(reason: str) -> None:
     print(json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False))
 
 
+def stop_prompt(reason: str) -> None:
+    """Stop UserPromptSubmit with one recorded result message."""
+    print(
+        json.dumps(
+            {"continue": False, "stopReason": reason},
+            ensure_ascii=False,
+        )
+    )
+
+
 def token_m(value: Any) -> str:
     try:
         number = float(value or 0)
@@ -397,7 +407,7 @@ def main() -> int:
         result = run_tracker(args)
         log(f"stop session={session_id or '-'} rc={result.returncode}")
         if result.returncode == 0:
-            block("已停止当前 Codex 会话的 Multica 跟踪。")
+            stop_prompt("已停止当前 Codex 会话的 Multica 跟踪。")
         else:
             detail = (result.stderr or result.stdout or "stop failed").strip()
             block(f"Multica 停止失败：{detail}")
