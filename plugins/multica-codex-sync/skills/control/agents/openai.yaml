@@ -1,4 +1,3 @@
 interface:
   display_name: "Multica Agent"
   short_description: "Bind, inspect, diagnose, or stop Multica task sync."
-  default_prompt: "$multica-codex-sync:control help"

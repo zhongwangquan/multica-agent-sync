@@ -154,7 +154,7 @@ class PluginManifestTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn('display_name: "Multica Agent"', openai_yaml)
-        self.assertIn("$multica-codex-sync:control", openai_yaml)
+        self.assertNotIn("default_prompt:", openai_yaml)
         self.assertEqual(
             manifest["repository"],
             "https://github.com/zhongwangquan/multica-agent-sync",
