@@ -9,57 +9,28 @@ and continuously syncs new visible messages and token usage.
 
 Install through the repository marketplace as described in the
 [project README](../../README.md). Fully restart Codex Desktop and start a new
-task. Hook Trust is needed only for the legacy `/multica ...` commands; Skill
-actions invoke the tracker CLI directly. Hook Trust cannot and should not be
-automated.
+task. Using **Multica Codex Sync** from the `/` Skill picker needs no additional
+setup. Hook Trust is needed only for the legacy `/multica ...` commands and
+cannot be automated.
 
 The plugin requires Python 3, `curl`, and an authenticated Multica CLI by
 default. An authenticated Wujie CLI is accepted as a compatibility fallback.
 Configuration discovery checks Multica first, then Wujie; the chat command
 namespace remains `/multica`.
 
-## Chat commands
+## Use
 
-Commands must begin the first line:
+Type `/` in the Codex chat box, choose **Multica Codex Sync**, then enter one
+action: `4158`, `bind 4158`, `status`, `stop`, `help`, or `doctor`. The issue
+number is an example. This recommended method does not require Hook Trust.
 
-```text
-/multica 4158
-/multica status
-/multica stop
-/multica help
-/multica doctor
-```
+For compatibility, you can enable the plugin Hook and type `/multica 4158`,
+`/multica status`, `/multica stop`, `/multica help`, or `/multica doctor` at
+the beginning of the first line. Hyphen forms such as `/multica-4158` are also
+supported.
 
-Equivalent hyphen forms are `/multica-4158`, `/multica-status`,
-`/multica-stop`, `/multica-help`, and `/multica-doctor`. No other command
-namespace is recognized.
-
-Choose **Multica Codex Sync** from the `/` Skill picker and submit `4158`,
-`bind 4158`, `status`, `stop`, `help`, or `doctor`. Explicit invocations are:
-
-```text
-$multica-codex-sync:control 4158
-$multica-codex-sync:control bind 4158
-$multica-codex-sync:control status
-$multica-codex-sync:control stop
-$multica-codex-sync:control help
-$multica-codex-sync:control doctor
-```
-
-| Behavior | Skill action | Legacy `/multica` command |
-| --- | --- | --- |
-| Execution | Agent calls the tracker CLI directly | Hook intercepts the first prompt line |
-| Hook Trust | Not required | Required |
-| Model turn | Runs in the current Agent turn | Informational actions finish before a model turn; binding continues with issue context |
-| Positioning | Recommended interface | Compatibility interface |
-
-Skill actions call the installed tracker CLI directly and use
-`CODEX_THREAD_ID` to target the exact current task. They bypass the Hook. The
-Hook remains only as a compatibility path for `/multica ...` commands.
-
-Each Codex task can track only one issue. If a task is already tracking a
-different issue, the plugin does not switch it automatically. Stop and bind in
-two separate actions through the same interface.
+Each Codex task can track only one issue. To switch issues, stop the current
+tracking first, then bind the new issue in a separate action.
 
 ## Privacy and safety
 

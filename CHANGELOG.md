@@ -7,10 +7,9 @@ Versioning.
 
 ### Added
 
-- Add one `Multica Codex Sync` action Skill to the Skill picker. Bind, status,
-  stop, help, and doctor actions invoke the installed CLI directly and use
-  `CODEX_THREAD_ID` for exact task targeting; the Hook remains only for legacy
-  `/multica` commands.
+- Add one `Multica Codex Sync` action Skill to the Skill picker for bind,
+  status, stop, help, and doctor actions without requiring Hook Trust. Legacy
+  `/multica` commands remain available for compatibility.
 
 ### Changed
 

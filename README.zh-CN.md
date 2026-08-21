@@ -68,7 +68,31 @@ GitHub Release 也会自动提供源码压缩包。
 
 ## 使用
 
-把命令放在第一行开头：
+### 推荐：从 Skill 选择器使用
+
+1. 在 Codex 聊天框输入 `/`，选择 **Multica Codex Sync**。
+2. 在已选中的 Skill 后输入一个动作：
+
+   ```text
+   4158
+   bind 4158
+   status
+   stop
+   help
+   doctor
+   ```
+
+3. 发送消息。
+
+`4158` 只是 issue 编号示例。这种用法不需要 Hook Trust。
+
+每个 Codex 任务只能跟踪一个 Multica issue。如需换绑，先选择该
+Skill 并输入 `stop`，再次选择 Skill 并输入新的 issue 编号。
+
+### 兼容：直接输入 `/multica` 指令
+
+为了兼容现有工作流，旧指令仍然可用。先在 **设置 → Hooks** 中启用本插件
+Hook，再把一条指令放在聊天内容的第一行开头：
 
 ```text
 /multica 4158
@@ -78,39 +102,12 @@ GitHub Release 也会自动提供源码压缩包。
 /multica doctor
 ```
 
-也支持连字符形式：
+也支持 `/multica-4158`、`/multica-status` 等连字符形式。
 
-```text
-/multica-4158
-/multica-status
-/multica-stop
-/multica-help
-/multica-doctor
-```
-
-### Skill 动作
-
-从 `/` Skill 选择器中选择 **Multica Codex Sync**，然后提交 `4158`、
-`bind 4158`、`status`、`stop`、`help` 或 `doctor`。也可以显式调用 Skill：
-
-```text
-$multica-codex-sync:control 4158
-$multica-codex-sync:control bind 4158
-$multica-codex-sync:control status
-$multica-codex-sync:control stop
-$multica-codex-sync:control help
-$multica-codex-sync:control doctor
-```
-
-### Skill 动作与旧指令的区别
-
-| 行为 | Skill 动作 | 旧 `/multica` 指令 |
+| 方式 | 怎么用 | 额外设置 |
 | --- | --- | --- |
-| 入口 | `/` Skill 选择器或 `$multica-codex-sync:control` | 聊天 prompt 第一行开头 |
-| 执行方式 | Agent 直接调用已安装的 tracker CLI | `UserPromptSubmit` Hook 拦截并执行 |
-| Hook Trust | 不需要 | 需要 |
-| 模型回合 | 在当前 Agent 回合执行 | 状态、停止、帮助和诊断在模型回合前完成；绑定会携带 issue 上下文继续 |
-| 定位 | 推荐入口 | 为现有工作流保留的兼容入口 |
+| Skill 选择器（推荐） | 选择 **Multica Codex Sync**，再输入动作 | 安装后无需额外设置 |
+| `/multica` 指令（兼容） | 在第一行开头输入完整指令 | 需要启用 Hook Trust |
 
 插件只识别 `/multica` 命名空间，不占用容易和 Codex 功能、模板或其他插件
 冲突的通用 issue、stop 命令。
@@ -122,15 +119,7 @@ $multica-codex-sync:control doctor
 Wujie 配置一致，插件才会使用 Wujie 配置和它自己的 token 重试一次。
 Multica 凭据不会被透传到重定向目标，未匹配本地配置的 origin 会被拒绝。
 
-Skill 动作会在 Agent 回合中直接调用已安装的 tracker CLI，并使用 Codex
-提供的 `CODEX_THREAD_ID` 精确定位当前任务，不依赖、也不经过
-`UserPromptSubmit` Hook。Hook 仅作为旧 `/multica ...` 指令的兼容入口。
-
-一个 Codex 任务只能跟踪一个 Multica issue。若它已绑定其他 issue，插件不会自动
-换绑。请先用同一入口停止当前 tracker，再单独绑定新 issue。例如先执行
-`$multica-codex-sync:control stop`，再执行
-`$multica-codex-sync:control 4158`；或者先执行 `/multica stop`，再执行
-`/multica 4158`。
+插件不会自动把已绑定的任务换到另一个 issue。
 
 ## 升级
 
