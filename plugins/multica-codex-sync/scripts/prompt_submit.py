@@ -69,10 +69,14 @@ def block(reason: str) -> None:
 
 
 def stop_prompt(reason: str) -> None:
-    """Stop UserPromptSubmit with one recorded result message."""
+    """Stop UserPromptSubmit and surface one visible result message."""
     print(
         json.dumps(
-            {"continue": False, "stopReason": reason},
+            {
+                "continue": False,
+                "stopReason": reason,
+                "systemMessage": reason,
+            },
             ensure_ascii=False,
         )
     )

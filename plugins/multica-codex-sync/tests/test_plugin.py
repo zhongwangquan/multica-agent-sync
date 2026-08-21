@@ -293,6 +293,10 @@ class PluginHookTests(unittest.TestCase):
                         output["stopReason"],
                         "已停止当前 Codex 会话的 Multica 跟踪。",
                     )
+                    self.assertEqual(
+                        output["systemMessage"],
+                        "已停止当前 Codex 会话的 Multica 跟踪。",
+                    )
                     self.assertNotIn("decision", output)
                     self.assertNotIn("reason", output)
                 else:

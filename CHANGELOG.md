@@ -20,8 +20,8 @@ Versioning.
 - Detect when a Codex task is already tracking a different issue and show an
   explicit, non-automatic rebind sequence instead of injecting the newly
   requested issue context.
-- Emit one stop result through the UserPromptSubmit stop path so Codex does not
-  render duplicate success cards.
+- Emit one visible stop result through the UserPromptSubmit stop path without
+  rendering duplicate success cards.
 
 ## 1.1.5 - 2026-08-21
 
