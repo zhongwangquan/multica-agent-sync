@@ -295,20 +295,27 @@ class PluginHookTests(unittest.TestCase):
                 self.assertEqual(json.loads(arguments.read_text()), expected)
                 output = json.loads(result.stdout)
                 if "stop" in command:
-                    self.assertFalse(output["continue"])
                     self.assertEqual(
-                        output["stopReason"],
-                        "已停止当前 Codex 会话的 Multica 跟踪。",
+                        output,
+                        {
+                            "decision": "block",
+                            "reason": "已停止当前 Codex 会话的 Multica 跟踪。",
+                        },
                     )
                     self.assertEqual(
-                        output["systemMessage"],
-                        "已停止当前 Codex 会话的 Multica 跟踪。",
+                        result.stdout.count(
+                            "已停止当前 Codex 会话的 Multica 跟踪。"
+                        ),
+                        1,
                     )
-                    self.assertNotIn("decision", output)
-                    self.assertNotIn("reason", output)
+                    self.assertNotIn("systemMessage", output)
+                    self.assertNotIn("stopReason", output)
                 else:
                     self.assertEqual(output["decision"], "block")
-                    self.assertIn("当前 Codex ↔ Multica 链接状态", output["reason"])
+                    self.assertIn(
+                        "当前 Codex ↔ Multica 链接状态",
+                        output["reason"],
+                    )
                 self.assertNotIn("hookSpecificOutput", output)
 
     def test_help_supports_space_and_hyphen_forms_without_running_cli(self) -> None:

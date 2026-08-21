@@ -20,8 +20,8 @@ Versioning.
 - Detect when a Codex task is already tracking a different issue and show an
   explicit, non-automatic rebind sequence instead of injecting the newly
   requested issue context.
-- Emit one visible stop result through the UserPromptSubmit stop path without
-  rendering duplicate success cards.
+- Return the stop confirmation through the same visible UserPromptSubmit result
+  path as the other informational chat commands.
 - Scope status and rebind checks to the exact current Codex task, and refuse
   task-scoped commands when the task id is unavailable.
 
