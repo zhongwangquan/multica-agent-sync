@@ -117,13 +117,12 @@ exact command text in the chat box.
 
 ## Upgrade
 
-Choose a release channel when adding the marketplace:
+Choose between the latest `main` snapshot and an exact release tag:
 
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
 | omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
 | `v1.1.5` | Optional exact release | Remains pinned to that version |
-| `develop` | Test channel | May contain unreleased changes |
 
 The default installation above follows the stable channel. In Codex Desktop,
 open **Settings → Plugins → Marketplaces**, find **Multica Agent Sync**,

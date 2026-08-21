@@ -5,6 +5,11 @@ Versioning.
 
 ## Unreleased
 
+### Changed
+
+- Use `main` as the repository's only long-lived branch and remove the
+  `develop` release channel from contributor and installation guidance.
+
 ## 1.1.5 - 2026-08-21
 
 ### Added

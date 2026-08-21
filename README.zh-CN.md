@@ -106,13 +106,12 @@ Multica 凭据不会被透传到重定向目标，未匹配本地配置的 origi
 
 ## 升级
 
-添加 marketplace 时可以选择发布通道：
+添加 marketplace 时，可以选择最新 `main` 快照或指定精确发布 tag：
 
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
 | 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
 | `v1.1.5` | 可选固定版本 | 始终保持在该版本 |
-| `develop` | 测试通道 | 可能包含尚未发布的改动 |
 
 上面的默认安装即跟随稳定通道。在 Codex Desktop 中打开
 **设置 → Plugins → Marketplaces**，找到 **Multica Agent Sync** 并点击

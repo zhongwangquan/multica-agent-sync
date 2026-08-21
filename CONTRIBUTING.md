@@ -27,7 +27,7 @@ must not depend on the developer's real user data.
 
 ## Pull requests
 
-1. Create a focused branch from `develop`.
+1. Create a focused, short-lived branch from `main`.
 2. Add regression coverage for user-visible or high-risk behavior.
 3. Keep source comments and docstrings in English.
 4. Align English and Chinese documentation when behavior changes.
@@ -35,10 +35,9 @@ must not depend on the developer's real user data.
 6. Run the complete release gate and include the result in the PR.
 7. Obtain review before merging behavior-changing work.
 
-Normal changes merge into `develop`. A release pull request promotes the tested
-state from `develop` to `main`. Urgent fixes may branch from `main`, but must be
-merged back into `develop` after release. See
-[release channels](docs/release-channels.md).
+All changes merge into `main` through pull requests. `main` is the only
+long-lived branch; feature, fix, and release branches are temporary and should
+be removed after merge. See [release channels](docs/release-channels.md).
 
 ## Versioning
 

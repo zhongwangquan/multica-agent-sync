@@ -71,7 +71,7 @@ def main() -> int:
             f"missing optional exact-tag install for {release_tag} in {readme.name}",
         )
         require("`main`" in text, f"missing stable channel in {readme.name}")
-        require("`develop`" in text, f"missing test channel in {readme.name}")
+        require("`develop`" not in text, f"unexpected develop channel in {readme.name}")
         command_labels = (
             ("# Step 1 of 2:", "# Required:", "# Optional:")
             if readme.name == "README.md"
@@ -84,13 +84,18 @@ def main() -> int:
     for expected in (
         "`vX.Y.Z`",
         "`main`",
-        "`develop`",
         f"--ref {release_tag}",
         default_marketplace_command,
         "# Step 1 of 2:",
         "# Step 1 of 4:",
     ):
         require(expected in channels, f"release channels missing {expected}")
+    require("`develop`" not in channels, "release channels still mention develop")
+
+    for policy_file in (ROOT / "CONTRIBUTING.md", ROOT / "RELEASING.md"):
+        policy = policy_file.read_text(encoding="utf-8")
+        require("`main`" in policy, f"missing main branch policy in {policy_file.name}")
+        require("`develop`" not in policy, f"unexpected develop branch in {policy_file.name}")
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     require(f"## {version}" in changelog, "release version missing from changelog")
