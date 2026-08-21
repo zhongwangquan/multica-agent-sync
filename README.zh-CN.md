@@ -18,7 +18,7 @@ local run。
 
 - 通过 Codex 插件管理器安装、升级和移除。
 - Hook 跟随插件加载，安装器不修改用户 Hook 文件。
-- 不替换、不包裹 `multica` 或 `wujie` 命令。
+- 不替换、不包裹 `multica` 命令。
 - 运行状态保存在 Codex 提供的 `$PLUGIN_DATA`，并使用当前用户私有权限。
 - 清理前会核对归属、进程身份和已知文件名；未知文件一律保留。
 - 源码、版本、Issue 和 PR 都可以在 GitHub 审查与追踪。
@@ -27,8 +27,7 @@ local run。
 
 - macOS，以及支持插件的 Codex Desktop。
 - Python 3、`curl`。
-- 默认使用已安装并登录的 Multica CLI；也兼容已登录的 Wujie CLI。
-  插件会先检查 Multica 配置，再回退到 Wujie 配置，不输出 access token。
+- 已安装并登录的 Multica CLI。插件不输出 access token。
 
 ## 安装
 
@@ -59,40 +58,15 @@ GitHub Release 也会自动提供源码压缩包。
 安装后：
 
 1. 完整退出并重新打开 Codex Desktop。
-2. 新建 Codex 任务，从 `/` Skill 选择器使用 **Multica Codex Sync**。
-3. 可选：如果还要使用旧的 `/multica ...` 指令，打开 **设置 → Hooks**，
-   核对本插件的 `UserPromptSubmit` 命令，点击 **Trust** 并开启。这是
-   Codex 要求保留的人工安全确认。
+2. 打开 **设置 → Hooks**，核对本插件的 `UserPromptSubmit` 命令，
+   点击 **Trust** 并开启。这是 Codex 要求保留的人工安全确认。
+3. 新建 Codex 任务，发送 `/multica ...` 指令。
 
 不要在聊天框输入 `/hooks`；Hook 的 Trust 操作在设置页完成。
 
 ## 使用
 
-### 推荐：从 Skill 选择器使用
-
-1. 在 Codex 聊天框输入 `/`，选择 **Multica Codex Sync**。
-2. 在已选中的 Skill 后输入一个动作：
-
-   ```text
-   4158
-   bind 4158
-   status
-   stop
-   help
-   doctor
-   ```
-
-3. 发送消息。
-
-`4158` 只是 issue 编号示例。这种用法不需要 Hook Trust。
-
-每个 Codex 任务只能跟踪一个 Multica issue。如需换绑，先选择该
-Skill 并输入 `stop`，再次选择 Skill 并输入新的 issue 编号。
-
-### 兼容：直接输入 `/multica` 指令
-
-为了兼容现有工作流，旧指令仍然可用。先在 **设置 → Hooks** 中启用本插件
-Hook，再把一条指令放在聊天内容的第一行开头：
+把一条指令放在聊天内容的第一行开头。不需要先选择或触发 Skill：
 
 ```text
 /multica 4158
@@ -102,24 +76,21 @@ Hook，再把一条指令放在聊天内容的第一行开头：
 /multica doctor
 ```
 
-也支持 `/multica-4158`、`/multica-status` 等连字符形式。
+`4158` 只是 issue 编号示例。也支持 `/multica-4158`、
+`/multica-status` 等连字符形式。
 
-| 方式 | 怎么用 | 额外设置 |
-| --- | --- | --- |
-| Skill 选择器（推荐） | 选择 **Multica Codex Sync**，再输入动作 | 安装后无需额外设置 |
-| `/multica` 指令（兼容） | 在第一行开头输入完整指令 | 需要启用 Hook Trust |
+也可以作为可选方式，输入 `/`，选择 **Multica Agent**，再输入
+`4158`、`status`、`stop`、`help` 或 `doctor` 等动作。不需要输入
+内部调用格式。
 
 插件只识别 `/multica` 命名空间，不占用容易和 Codex 功能、模板或其他插件
 冲突的通用 issue、stop 命令。
 
-运行时发现仍以 Multica 为默认：先读取 `MULTICA_HOME` 或 `~/.multica`，
-只在没有有效 Multica 配置时才回退到 `WUJIE_HOME` 或 `~/.wujie`。
-注入的 Issue CLI 上下文会请求 Codex 优先使用 `multica`，仅在该命令不可用时
-回退到 `wujie`。如果选中的 Multica 端点返回永久重定向，且目标 origin 与本机
-Wujie 配置一致，插件才会使用 Wujie 配置和它自己的 token 重试一次。
-Multica 凭据不会被透传到重定向目标，未匹配本地配置的 origin 会被拒绝。
+身份信息从 `MULTICA_HOME` 或 `~/.multica` 读取。凭据不会被透传到
+不可信的重定向 origin。
 
-插件不会自动把已绑定的任务换到另一个 issue。
+每个 Codex 任务只能跟踪一个 Multica issue。如需换绑，先发送
+`/multica stop`，再单独发送新的 issue 编号。插件不会自动换绑。
 
 ## 升级
 

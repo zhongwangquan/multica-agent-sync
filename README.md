@@ -19,7 +19,7 @@ later, but no Claude integration is included or claimed in this release.
 
 - Codex installs, updates, and removes the package through its plugin manager.
 - The Hook is bundled with the plugin; no installer edits user Hook files.
-- The plugin never replaces or wraps the `multica` or `wujie` executable.
+- The plugin never replaces or wraps the `multica` executable.
 - Runtime state is private and isolated in Codex-provided `$PLUGIN_DATA`.
 - Cleanup verifies ownership, process identity, and known filenames before it
   removes anything. Unknown files are preserved.
@@ -29,10 +29,8 @@ later, but no Claude integration is included or claimed in this release.
 
 - macOS and a Codex Desktop version with plugin support.
 - Python 3 and `curl`.
-- An authenticated Multica CLI installation is the default. An authenticated
-  Wujie CLI installation is accepted as a compatibility fallback. The plugin
-  checks Multica configuration first, then Wujie configuration, and never
-  prints an access token.
+- An authenticated Multica CLI installation. The plugin never prints an access
+  token.
 
 ## Install
 
@@ -66,43 +64,17 @@ for every release.
 Then:
 
 1. Fully quit and reopen Codex Desktop.
-2. Start a new Codex task and use **Multica Codex Sync** from the `/` Skill
-   picker.
-3. Optional: to keep using the legacy `/multica ...` commands, open
-   **Settings → Hooks**, review the plugin's `UserPromptSubmit` command,
+2. Open **Settings → Hooks**, review the plugin's `UserPromptSubmit` command,
    click **Trust**, and enable it. Codex intentionally requires this manual
    security decision.
+3. Start a new Codex task and send a `/multica ...` command.
 
 Do not type `/hooks` in the chat box; Hook trust is managed in Settings.
 
 ## Use
 
-### Recommended: use the Skill picker
-
-1. Type `/` in the Codex chat box and choose **Multica Codex Sync**.
-2. Enter one action after the selected Skill:
-
-   ```text
-   4158
-   bind 4158
-   status
-   stop
-   help
-   doctor
-   ```
-
-3. Submit the message.
-
-`4158` is an example issue number. This method does not require Hook Trust.
-
-Each Codex task can track only one Multica issue. To switch issues, select the
-Skill and submit `stop`, then select it again and submit the new issue number.
-
-### Compatibility: type `/multica` commands
-
-The older command form remains available for existing workflows. Enable the
-plugin Hook in **Settings → Hooks**, then place one command at the beginning of
-the first line:
+Place one command at the beginning of the first line. You do not need to select
+or run a Skill first:
 
 ```text
 /multica 4158
@@ -112,27 +84,23 @@ the first line:
 /multica doctor
 ```
 
-Hyphen forms such as `/multica-4158` and `/multica-status` are also supported.
+`4158` is an example issue number. Hyphen forms such as `/multica-4158` and
+`/multica-status` are also supported.
 
-| Method | How to use it | Extra setup |
-| --- | --- | --- |
-| Skill picker (recommended) | Choose **Multica Codex Sync**, then enter an action | None after installation |
-| `/multica` commands (compatibility) | Type the full command at the start of the first line | Enable Hook Trust |
+As an optional alternative, type `/`, choose **Multica Agent**, and enter one
+action such as `4158`, `status`, `stop`, `help`, or `doctor`. No internal
+invocation syntax is needed.
 
 Only the `/multica` namespace is recognized. The plugin deliberately does not
 claim generic issue or stop command names that may collide with Codex features,
 templates, or other plugins.
 
-Runtime discovery remains Multica-first. Authentication is read from
-`MULTICA_HOME` or `~/.multica` before falling back to `WUJIE_HOME` or
-`~/.wujie`. Injected issue context asks Codex to use `multica` first and use
-`wujie` only when the `multica` executable is unavailable. If the selected
-Multica endpoint returns a permanent redirect whose origin matches the locally
-configured Wujie endpoint, the plugin retries once with the Wujie configuration
-and its own token. Multica credentials are never forwarded through the
-redirect, and unmatched redirect origins are rejected.
+Authentication is read from `MULTICA_HOME` or `~/.multica`. Credentials are
+never forwarded to an untrusted redirect origin.
 
-The plugin never switches an existing task to another issue automatically.
+Each Codex task can track only one Multica issue. To switch issues, first send
+`/multica stop`, then send the new issue number in a separate command. The
+plugin never switches an existing task automatically.
 
 ## Upgrade
 

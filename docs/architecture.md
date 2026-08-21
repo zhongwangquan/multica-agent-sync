@@ -4,9 +4,9 @@ The current product is a Codex plugin with one host adapter and one Multica
 transport.
 
 ```text
-Skill --------direct--------> lifecycle CLI ----> Multica local-run API
+/multica Hook ----------------> lifecycle CLI ----> Multica local-run API
                                   |
-legacy /multica Hook -------------+
+bundled control Skill ------------+
                                   |
                                   v
                          Codex rollout adapter
@@ -29,11 +29,16 @@ legacy /multica Hook -------------+
 - `scripts/multica_codex_sync/cli.py` owns tracker lifecycle, status, doctor,
   and conservative cleanup.
 
-The plugin bundles one action Skill that invokes the lifecycle CLI directly in
-the agent turn. It uses `CODEX_THREAD_ID` for exact task-scoped status, stop,
-and binding operations. The `UserPromptSubmit` Hook recognizes only the legacy
-`/multica` namespace and remains a compatibility path; it does not intercept
-Skill chips or `$multica-codex-sync:control` invocations.
+The recommended user entry point is the `/multica` namespace handled by the
+`UserPromptSubmit` Hook. The plugin also bundles one control Skill as an
+integration path. It invokes the lifecycle CLI directly in the agent turn and
+uses `CODEX_THREAD_ID` for exact task-scoped status, stop, and binding
+operations. The Hook does not intercept Skill chips or explicit Skill
+invocations.
+
+Users trigger the Skill through the Codex `/` picker as **Multica Agent**. Any
+host-generated invocation encoding is an internal integration detail, not a
+public command interface.
 
 ## Extension boundary
 

@@ -7,9 +7,8 @@ Versioning.
 
 ### Added
 
-- Add one `Multica Codex Sync` action Skill to the Skill picker for bind,
-  status, stop, help, and doctor actions without requiring Hook Trust. Legacy
-  `/multica` commands remain available for compatibility.
+- Bundle one `Multica Agent` action Skill for Codex integration while
+  keeping `/multica` commands as the recommended user entry point.
 
 ### Changed
 
@@ -24,18 +23,10 @@ Versioning.
 
 ## 1.1.5 - 2026-08-21
 
-### Added
-
-- Keep Multica configuration discovery as the default while accepting
-  authenticated Wujie configuration as a compatibility fallback, and instruct
-  bound Codex tasks to use Wujie issue commands only when `multica` is
-  unavailable.
-
 ### Fixed
 
-- Retry a permanently redirected Multica request only when the redirect origin
-  matches the locally configured Wujie endpoint, using the Wujie token without
-  forwarding Multica credentials.
+- Harden configuration discovery and redirected requests so credentials are
+  never forwarded to an untrusted origin.
 - Replace the failing third-party Star History README chart with native GitHub
   activity links.
 

@@ -1,4 +1,4 @@
-# Multica Codex Sync 1.2
+# Multica Agent 1.2
 
 English | [简体中文](README.zh-CN.md)
 
@@ -8,26 +8,23 @@ and continuously syncs new visible messages and token usage.
 ## Setup
 
 Install through the repository marketplace as described in the
-[project README](../../README.md). Fully restart Codex Desktop and start a new
-task. Using **Multica Codex Sync** from the `/` Skill picker needs no additional
-setup. Hook Trust is needed only for the legacy `/multica ...` commands and
-cannot be automated.
+[project README](../../README.md). Fully restart Codex Desktop, enable and trust
+the plugin Hook in Settings, then start a new task. Hook Trust cannot be
+automated.
 
-The plugin requires Python 3, `curl`, and an authenticated Multica CLI by
-default. An authenticated Wujie CLI is accepted as a compatibility fallback.
-Configuration discovery checks Multica first, then Wujie; the chat command
-namespace remains `/multica`.
+The plugin requires Python 3, `curl`, and an authenticated Multica CLI. The
+chat command namespace is `/multica`.
 
 ## Use
 
-Type `/` in the Codex chat box, choose **Multica Codex Sync**, then enter one
-action: `4158`, `bind 4158`, `status`, `stop`, `help`, or `doctor`. The issue
-number is an example. This recommended method does not require Hook Trust.
+Type `/multica 4158`, `/multica status`, `/multica stop`, `/multica help`, or
+`/multica doctor` at the beginning of the first line. The issue number is an
+example. Hyphen forms such as `/multica-4158` are also supported. You do not
+need to select or run a Skill first.
 
-For compatibility, you can enable the plugin Hook and type `/multica 4158`,
-`/multica status`, `/multica stop`, `/multica help`, or `/multica doctor` at
-the beginning of the first line. Hyphen forms such as `/multica-4158` are also
-supported.
+As an optional alternative, type `/`, choose **Multica Agent**, and enter one
+action such as `4158`, `status`, `stop`, `help`, or `doctor`. No internal
+invocation syntax is needed.
 
 Each Codex task can track only one issue. To switch issues, stop the current
 tracking first, then bind the new issue in a separate action.
@@ -41,6 +38,6 @@ not appear in process arguments or logs.
 
 Internal cleanup code validates the plugin ownership marker and tracker process
 identity. The public plugin exposes no cleanup/purge chat command. It does not
-replace the Multica or Wujie CLI, edit Hook configuration, alter Hook trust, or
-delete unknown data. See the repository
+replace the Multica CLI, edit Hook configuration, alter Hook trust, or delete
+unknown data. See the repository
 [security model](../../docs/security-model.md).

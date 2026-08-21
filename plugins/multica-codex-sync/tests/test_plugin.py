@@ -133,6 +133,7 @@ class PluginManifestTests(unittest.TestCase):
         self.assertEqual(manifest["name"], PLUGIN_ROOT.name)
         self.assertEqual(manifest["version"], "1.2.0")
         self.assertEqual(manifest["license"], "MIT")
+        self.assertEqual(manifest["interface"]["displayName"], "Multica Agent")
         self.assertEqual(manifest["skills"], "./skills/")
         skill_root = PLUGIN_ROOT / "skills" / "control"
         self.assertEqual(
@@ -150,7 +151,7 @@ class PluginManifestTests(unittest.TestCase):
         openai_yaml = (skill_root / "agents" / "openai.yaml").read_text(
             encoding="utf-8"
         )
-        self.assertIn('display_name: "Multica Codex Sync"', openai_yaml)
+        self.assertIn('display_name: "Multica Agent"', openai_yaml)
         self.assertIn("$multica-codex-sync:control", openai_yaml)
         self.assertEqual(
             manifest["repository"],
