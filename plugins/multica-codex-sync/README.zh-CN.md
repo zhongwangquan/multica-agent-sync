@@ -1,4 +1,4 @@
-# Multica Agent 1.2
+# Multica Codex Sync 1.2
 
 [English](README.md) | 简体中文
 
@@ -22,17 +22,17 @@ Hook Trust 不能由插件自动完成。
 `/multica stop`、`/multica help` 或 `/multica doctor`。issue 编号只是示例。
 也支持 `/multica-4158` 等连字符形式。
 
-### 可选：`/` Skill 选择器
+### 可选：`/multica-sync` Skill
 
-输入 `/`，选择 **Multica Agent**，再输入 `4158`、`bind 4158`、
+输入 `/multica-sync`，选择 **Multica Sync**，再输入 `4158`、`bind 4158`、
 `status`、`stop`、`help` 或 `doctor`。不需要输入内部调用格式。
 
-| 区别 | `/multica` 指令 | `/` Skill 选择器 |
+| 区别 | `/multica` 指令 | `/multica-sync` Skill |
 | --- | --- | --- |
 | 定位 | 推荐 | 可选 |
-| 输入方式 | 在第一行输入完整指令 | 选择 **Multica Agent** 后输入动作 |
+| 输入方式 | 在第一行输入完整指令 | 输入 `/multica-sync`，选择 **Multica Sync** 后输入动作 |
 | Hook Trust | 需要 | 不需要 |
-| 执行效果 | 固定控制直接完成；绑定会携带 issue 上下文继 | 在 Agent 回合中执行动作 |
+| 执行效果 | 固定控制直接完成；绑定会携带 issue 上下文继续 | 在 Agent 回合中执行动作 |
 
 每个 Codex 任务只能跟踪一个 issue。如需换绑，请先停止当前跟踪，再单独
 绑定新 issue。

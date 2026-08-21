@@ -7,7 +7,7 @@ Versioning.
 
 ### Added
 
-- Bundle one `Multica Agent` action Skill for Codex integration while
+- Bundle one `/multica-sync` action Skill for Codex integration while
   keeping `/multica` commands as the recommended user entry point.
 
 ### Changed

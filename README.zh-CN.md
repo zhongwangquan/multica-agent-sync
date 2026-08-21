@@ -81,9 +81,9 @@ GitHub Release 也会自动提供源码压缩包。
 `4158` 只是 issue 编号示例。也支持 `/multica-4158`、
 `/multica-status` 等连字符形式。
 
-### 可选：`/` Skill 选择器
+### 可选：`/multica-sync` Skill
 
-输入 `/`，选择 **Multica Agent**，输入一个动作后发送：
+输入 `/multica-sync`，选择 **Multica Sync**，输入一个动作后发送：
 
 ```text
 4158
@@ -96,15 +96,16 @@ doctor
 
 不需要输入内部调用格式。
 
-| 区别 | `/multica` 指令 | `/` Skill 选择器 |
+| 区别 | `/multica` 指令 | `/multica-sync` Skill |
 | --- | --- | --- |
 | 定位 | 推荐 | 可选 |
-| 输入方式 | 在第一行输入完整指令 | 选择 **Multica Agent** 后输入动作 |
+| 输入方式 | 在第一行输入完整指令 | 输入 `/multica-sync`，选择 **Multica Sync** 后输入动作 |
 | Hook Trust | 需要 | 不需要 |
 | 执行效果 | 状态、停止、帮助和诊断直接完成；绑定会携带 issue 上下文继续 | 选中的动作会在 Agent 回合中执行 |
 
-插件只识别 `/multica` 命名空间，不占用容易和 Codex 功能、模板或其他插件
-冲突的通用 issue、stop 命令。
+Hook 只识别 `/multica` 命名空间。独立的 `/multica-sync` 名称属于
+可选 Skill，因此用户仍可以手动输入 `/multica` 指令。插件不占用容易和
+Codex 功能、模板或其他插件冲突的通用 issue、stop 命令。
 
 身份信息从 `MULTICA_HOME` 或 `~/.multica` 读取。凭据不会被透传到
 不可信的重定向 origin。

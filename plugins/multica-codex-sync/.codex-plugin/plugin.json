@@ -17,7 +17,7 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Multica Agent",
+    "displayName": "Multica Codex Sync",
     "shortDescription": "Sync Codex conversations with Multica issues.",
     "longDescription": "Bind a Codex Desktop task to a Multica issue, then continuously sync new visible messages and token usage. Tracker state stays in private plugin data.",
     "developerName": "Jason",
@@ -29,8 +29,8 @@
     ],
     "defaultPrompt": [
       "Show me how to connect this task to a Multica issue.",
-      "Show the Multica Agent chat commands.",
-      "Diagnose whether Multica Agent is ready."
+      "Show the Multica Codex Sync chat commands.",
+      "Diagnose whether Multica Codex Sync is ready."
     ]
   }
 }

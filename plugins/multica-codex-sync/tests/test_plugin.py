@@ -133,27 +133,29 @@ class PluginManifestTests(unittest.TestCase):
         self.assertEqual(manifest["name"], PLUGIN_ROOT.name)
         self.assertEqual(manifest["version"], "1.2.0")
         self.assertEqual(manifest["license"], "MIT")
-        self.assertEqual(manifest["interface"]["displayName"], "Multica Agent")
+        self.assertEqual(
+            manifest["interface"]["displayName"], "Multica Codex Sync"
+        )
         self.assertEqual(manifest["skills"], "./skills/")
-        skill_root = PLUGIN_ROOT / "skills" / "control"
+        skill_root = PLUGIN_ROOT / "skills" / "multica-sync"
         self.assertEqual(
             sorted((PLUGIN_ROOT / "skills").glob("*/SKILL.md")),
             [skill_root / "SKILL.md"],
         )
         skill_text = (skill_root / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("name: control", skill_text)
+        self.assertIn("name: multica-sync", skill_text)
         self.assertIn("multica_codex_track.py", skill_text)
         self.assertIn("CODEX_THREAD_ID", skill_text)
         self.assertIn("bind <issue-number>", skill_text)
         self.assertIn("OPE-<issue-number>", skill_text)
         self.assertNotIn("normalize the issue to `OPE-4158`", skill_text)
-        self.assertNotIn("$multica-codex-sync:control", skill_text)
+        self.assertNotIn("$multica-codex-sync:", skill_text)
         self.assertIn("/multica <issue-number>", skill_text)
         self.assertIn("Do not resubmit", skill_text)
         openai_yaml = (skill_root / "agents" / "openai.yaml").read_text(
             encoding="utf-8"
         )
-        self.assertIn('display_name: "Multica Agent"', openai_yaml)
+        self.assertIn('display_name: "Multica Sync"', openai_yaml)
         self.assertNotIn("default_prompt:", openai_yaml)
         self.assertEqual(
             manifest["repository"],
@@ -353,16 +355,16 @@ class PluginHookTests(unittest.TestCase):
             "/multica dev",
             "/multica-dev",
             "$multica-codex-sync:other status",
-            "$multica-codex-sync:control 4158",
-            "$multica-codex-sync:control bind 4158",
-            "$multica-codex-sync:control status",
-            "$multica-codex-sync:control stop",
-            "$multica-codex-sync:control help",
-            "$multica-codex-sync:control doctor",
-            "$multica-codex-sync:control cleanup",
-            "[$multica-codex-sync\\:control](/tmp/plugin/skills/control/SKILL.md) status",
-            "[$multica-codex-sync\\:control](/tmp/plugin/skills/other/SKILL.md) status",
-            "[$multica-codex-sync\\:other](/tmp/plugin/skills/control/SKILL.md) status",
+            "$multica-codex-sync:multica-sync 4158",
+            "$multica-codex-sync:multica-sync bind 4158",
+            "$multica-codex-sync:multica-sync status",
+            "$multica-codex-sync:multica-sync stop",
+            "$multica-codex-sync:multica-sync help",
+            "$multica-codex-sync:multica-sync doctor",
+            "$multica-codex-sync:multica-sync cleanup",
+            "[$multica-codex-sync\\:multica-sync](/tmp/plugin/skills/multica-sync/SKILL.md) status",
+            "[$multica-codex-sync\\:multica-sync](/tmp/plugin/skills/other/SKILL.md) status",
+            "[$multica-codex-sync\\:other](/tmp/plugin/skills/multica-sync/SKILL.md) status",
             "please run /multica 9",
             "explain this\n/multica 9",
         )
@@ -503,6 +505,18 @@ class PluginHookTests(unittest.TestCase):
         self.assertEqual(tracker, {"issue": "OPE-2", "session_id": "current-task"})
         self.assertIsNone(prompt_submit.tracker_for_session(payload, "missing-task"))
 
+    def test_only_multica_sync_skill_chip_is_control_text(self) -> None:
+        chip = (
+            "[$multica-codex-sync\\:multica-sync]"
+            "(/tmp/plugin/skills/multica-sync/SKILL.md) status"
+        )
+        self.assertTrue(codex_adapter.is_skill_control_text(chip))
+        self.assertFalse(
+            codex_adapter.is_skill_control_text(
+                "$multica-codex-sync:multica-sync status"
+            )
+        )
+
     def test_control_messages_are_not_uploaded(self) -> None:
         class RecordingApi:
             def __init__(self):
@@ -525,12 +539,7 @@ class PluginHookTests(unittest.TestCase):
             "/multica stop",
             "/multica help",
             "/multica doctor",
-            "$multica-codex-sync:control 4158",
-            "$multica-codex-sync:control status",
-            "$multica-codex-sync:control stop",
-            "$multica-codex-sync:control help",
-            "$multica-codex-sync:control doctor",
-            "[$multica-codex-sync\\:control](/tmp/plugin/skills/control/SKILL.md) status",
+            "[$multica-codex-sync\\:multica-sync](/tmp/plugin/skills/multica-sync/SKILL.md) status",
         ):
             with self.subTest(command=command):
                 entry = {

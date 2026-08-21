@@ -32,14 +32,14 @@ fi
 python3 -c 'import json,sys; data=json.load(open(sys.argv[1])); assert data["name"] == "multica-codex-sync"; print("installed", data["name"], data["version"])' "$MANIFEST"
 
 INSTALLED_PLUGIN=$(CDPATH= cd -- "$(dirname -- "$MANIFEST")/.." && pwd)
-SKILL="$INSTALLED_PLUGIN/skills/control/SKILL.md"
+SKILL="$INSTALLED_PLUGIN/skills/multica-sync/SKILL.md"
 if [ ! -f "$SKILL" ]; then
-  echo "installed Multica control Skill was not found" >&2
+  echo "installed multica-sync Skill was not found" >&2
   exit 1
 fi
 
 HOOK_OUTPUT=$(
-  printf '%s' '{"prompt":"[$multica-codex-sync\\:control](/tmp/plugin/skills/control/SKILL.md) help","session_id":"smoke-task"}' |
+  printf '%s' '{"prompt":"[$multica-codex-sync\\:multica-sync](/tmp/plugin/skills/multica-sync/SKILL.md) help","session_id":"smoke-task"}' |
     PLUGIN_ROOT="$INSTALLED_PLUGIN" \
     PLUGIN_DATA="$CODEX_HOME/plugin-data" \
     python3 "$INSTALLED_PLUGIN/scripts/prompt_submit.py"

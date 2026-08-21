@@ -88,9 +88,9 @@ Place one command at the beginning of the first line:
 `4158` is an example issue number. Hyphen forms such as `/multica-4158` and
 `/multica-status` are also supported.
 
-### Optional: `/` Skill picker
+### Optional: `/multica-sync` Skill
 
-Type `/`, choose **Multica Agent**, enter one action, and submit:
+Type `/multica-sync`, choose **Multica Sync**, enter one action, and submit:
 
 ```text
 4158
@@ -103,16 +103,18 @@ doctor
 
 No internal invocation syntax is needed.
 
-| Difference | `/multica` commands | `/` Skill picker |
+| Difference | `/multica` commands | `/multica-sync` Skill |
 | --- | --- | --- |
 | Positioning | Recommended | Optional |
-| Input | Type the complete command on the first line | Choose **Multica Agent**, then enter the action |
+| Input | Type the complete command on the first line | Type `/multica-sync`, choose **Multica Sync**, then enter the action |
 | Hook Trust | Required | Not required |
 | Result | Status, stop, help, and doctor complete immediately; binding continues with issue context | The selected action runs in an Agent turn |
 
-Only the `/multica` namespace is recognized. The plugin deliberately does not
-claim generic issue or stop command names that may collide with Codex features,
-templates, or other plugins.
+The Hook recognizes only the `/multica` namespace. The separate
+`/multica-sync` name belongs to the optional Skill, so users can still type
+`/multica` commands manually. The plugin does not claim generic issue or stop
+command names that may collide with Codex features, templates, or other
+plugins.
 
 Authentication is read from `MULTICA_HOME` or `~/.multica`. Credentials are
 never forwarded to an untrusted redirect origin.

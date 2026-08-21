@@ -1,4 +1,4 @@
-# Multica Agent 1.2
+# Multica Codex Sync 1.2
 
 English | [简体中文](README.zh-CN.md)
 
@@ -23,15 +23,15 @@ Type `/multica 4158`, `/multica status`, `/multica stop`, `/multica help`, or
 `/multica doctor` at the beginning of the first line. The issue number is an
 example. Hyphen forms such as `/multica-4158` are also supported.
 
-### Optional: `/` Skill picker
+### Optional: `/multica-sync` Skill
 
-Type `/`, choose **Multica Agent**, and enter `4158`, `bind 4158`, `status`,
-`stop`, `help`, or `doctor`. No internal invocation syntax is needed.
+Type `/multica-sync`, choose **Multica Sync**, and enter `4158`, `bind 4158`,
+`status`, `stop`, `help`, or `doctor`. No internal invocation syntax is needed.
 
-| Difference | `/multica` commands | `/` Skill picker |
+| Difference | `/multica` commands | `/multica-sync` Skill |
 | --- | --- | --- |
 | Positioning | Recommended | Optional |
-| Input | Complete command on the first line | Choose **Multica Agent**, then enter the action |
+| Input | Complete command on the first line | Type `/multica-sync`, choose **Multica Sync**, then enter the action |
 | Hook Trust | Required | Not required |
 | Result | Fixed controls complete immediately; binding continues with issue context | Runs the action in an Agent turn |
 

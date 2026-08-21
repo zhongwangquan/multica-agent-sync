@@ -6,7 +6,7 @@ transport.
 ```text
 /multica Hook ----------------> lifecycle CLI ----> Multica local-run API
                                   |
-bundled control Skill ------------+
+bundled multica-sync Skill -------+
                                   |
                                   v
                          Codex rollout adapter
@@ -30,13 +30,14 @@ bundled control Skill ------------+
   and conservative cleanup.
 
 The recommended user entry point is the `/multica` namespace handled by the
-`UserPromptSubmit` Hook. The plugin also bundles one control Skill as an
+`UserPromptSubmit` Hook. The plugin also bundles one `multica-sync` Skill as an
 integration path. It invokes the lifecycle CLI directly in the agent turn and
 uses `CODEX_THREAD_ID` for exact task-scoped status, stop, and binding
 operations. The Hook does not intercept Skill chips or explicit Skill
 invocations.
 
-Users trigger the Skill through the Codex `/` picker as **Multica Agent**. Any
+Users trigger the Skill as `/multica-sync` through the Codex `/` picker. Its
+distinct name leaves `/multica` available for manual Hook commands. Any
 host-generated invocation encoding is an internal integration detail, not a
 public command interface.
 

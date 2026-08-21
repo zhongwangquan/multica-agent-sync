@@ -1,9 +1,9 @@
 ---
-name: control
+name: multica-sync
 description: Bind the current Codex Desktop task to a Multica issue, inspect or stop its tracker, show help, or run redacted readiness diagnostics by directly invoking the plugin CLI.
 ---
 
-# Control Multica Agent
+# Control Multica Sync
 
 Execute the requested action directly with the plugin CLI. Do not resubmit the
 action as a `/multica` command and do not wait for Hook output.

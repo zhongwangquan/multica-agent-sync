@@ -29,15 +29,15 @@ def main() -> int:
     require(manifest.get("version") == version, "manifest and VERSION differ")
     require(manifest.get("name") == "multica-codex-sync", "unexpected plugin name")
     require(manifest.get("skills") == "./skills/", "unexpected plugin skills path")
-    skill_root = PLUGIN / "skills" / "control"
+    skill_root = PLUGIN / "skills" / "multica-sync"
     bundled_skills = sorted((PLUGIN / "skills").glob("*/SKILL.md"))
     require(
         bundled_skills == [skill_root / "SKILL.md"],
-        "plugin must bundle only the Multica control Skill",
+        "plugin must bundle only the multica-sync Skill",
     )
     require(
         (skill_root / "agents" / "openai.yaml").is_file(),
-        "Multica control Skill is missing UI metadata",
+        "multica-sync Skill is missing UI metadata",
     )
     require(marketplace.get("name") == "multica-agent-sync", "unexpected marketplace name")
     require(len(marketplace.get("plugins", [])) == 1, "marketplace must expose one plugin")
@@ -71,7 +71,7 @@ def main() -> int:
         lines = text.splitlines()
         require("multica-agent-sync" in text, f"missing public install source in {readme.name}")
         require("/multica status" in text, f"missing command docs in {readme.name}")
-        require("Multica Agent" in text, f"missing optional Skill picker docs in {readme.name}")
+        require("/multica-sync" in text, f"missing optional Skill docs in {readme.name}")
         require(
             default_marketplace_command in lines,
             f"default install must omit --ref in {readme.name}",
@@ -93,7 +93,7 @@ def main() -> int:
     for markdown_path in ROOT.rglob("*.md"):
         markdown = markdown_path.read_text(encoding="utf-8")
         require(
-            "$multica-codex-sync:control" not in markdown,
+            "$multica-codex-sync:" not in markdown,
             f"internal Skill invocation leaked into {markdown_path.relative_to(ROOT)}",
         )
         require(
