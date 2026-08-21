@@ -47,7 +47,7 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 ```bash
 # 可选第 1/2 步：指定准确版本，而不是使用最新稳定版。
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.5
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.2.0
 
 # 第 2/2 步：安装并启用这个准确版本。
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -59,10 +59,10 @@ GitHub Release 也会自动提供源码压缩包。
 安装后：
 
 1. 完整退出并重新打开 Codex Desktop。
-2. 打开 **设置 → Hooks**。
-3. 核对本插件的 `UserPromptSubmit` 命令，点击 **Trust** 并打开开关。这是
+2. 新建 Codex 任务，从 `/` Skill 选择器使用 **Multica Codex Sync**。
+3. 可选：如果还要使用旧的 `/multica ...` 指令，打开 **设置 → Hooks**，
+   核对本插件的 `UserPromptSubmit` 命令，点击 **Trust** 并开启。这是
    Codex 要求保留的人工安全确认。
-4. 新建一个 Codex 任务。
 
 不要在聊天框输入 `/hooks`；Hook 的 Trust 操作在设置页完成。
 
@@ -88,6 +88,30 @@ GitHub Release 也会自动提供源码压缩包。
 /multica-doctor
 ```
 
+### Skill 动作
+
+从 `/` Skill 选择器中选择 **Multica Codex Sync**，然后提交 `4158`、
+`bind 4158`、`status`、`stop`、`help` 或 `doctor`。也可以显式调用 Skill：
+
+```text
+$multica-codex-sync:control 4158
+$multica-codex-sync:control bind 4158
+$multica-codex-sync:control status
+$multica-codex-sync:control stop
+$multica-codex-sync:control help
+$multica-codex-sync:control doctor
+```
+
+### Skill 动作与旧指令的区别
+
+| 行为 | Skill 动作 | 旧 `/multica` 指令 |
+| --- | --- | --- |
+| 入口 | `/` Skill 选择器或 `$multica-codex-sync:control` | 聊天 prompt 第一行开头 |
+| 执行方式 | Agent 直接调用已安装的 tracker CLI | `UserPromptSubmit` Hook 拦截并执行 |
+| Hook Trust | 不需要 | 需要 |
+| 模型回合 | 在当前 Agent 回合执行 | 状态、停止、帮助和诊断在模型回合前完成；绑定会携带 issue 上下文继续 |
+| 定位 | 推荐入口 | 为现有工作流保留的兼容入口 |
+
 插件只识别 `/multica` 命名空间，不占用容易和 Codex 功能、模板或其他插件
 冲突的通用 issue、stop 命令。
 
@@ -98,11 +122,15 @@ GitHub Release 也会自动提供源码压缩包。
 Wujie 配置一致，插件才会使用 Wujie 配置和它自己的 token 重试一次。
 Multica 凭据不会被透传到重定向目标，未匹配本地配置的 origin 会被拒绝。
 
-这些都是 Hook 直接指令，不是 Plugin 内置 Skill。`/multica status`、
-`/multica stop`、`/multica help` 和 `/multica doctor` 会在 prompt 进入模型前
-被拦截，不会启动一次模型驱动的 Skill 回合。`/multica 4158` 会先启动跟踪，再按
-设计携带 issue 上下文继续当前模型任务。这些指令不会出现在 Skill 列表中，需要在
-聊天框直接输入完整文本。
+Skill 动作会在 Agent 回合中直接调用已安装的 tracker CLI，并使用 Codex
+提供的 `CODEX_THREAD_ID` 精确定位当前任务，不依赖、也不经过
+`UserPromptSubmit` Hook。Hook 仅作为旧 `/multica ...` 指令的兼容入口。
+
+一个 Codex 任务只能跟踪一个 Multica issue。若它已绑定其他 issue，插件不会自动
+换绑。请先用同一入口停止当前 tracker，再单独绑定新 issue。例如先执行
+`$multica-codex-sync:control stop`，再执行
+`$multica-codex-sync:control 4158`；或者先执行 `/multica stop`，再执行
+`/multica 4158`。
 
 ## 升级
 
@@ -111,7 +139,7 @@ Multica 凭据不会被透传到重定向目标，未匹配本地配置的 origi
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
 | 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
-| `v1.1.5` | 可选固定版本 | 始终保持在该版本 |
+| `v1.2.0` | 可选固定版本 | 始终保持在该版本 |
 
 上面的默认安装即跟随稳定通道。在 Codex Desktop 中打开
 **设置 → Plugins → Marketplaces**，找到 **Multica Agent Sync** 并点击

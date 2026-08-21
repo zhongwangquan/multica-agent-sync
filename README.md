@@ -53,7 +53,7 @@ registering the marketplace:
 
 ```bash
 # Optional step 1 of 2: register an exact version instead of latest stable.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.1.5
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.2.0
 
 # Step 2 of 2: install and enable that exact plugin version.
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -66,10 +66,12 @@ for every release.
 Then:
 
 1. Fully quit and reopen Codex Desktop.
-2. Open **Settings → Hooks**.
-3. Review the plugin's `UserPromptSubmit` command, click **Trust**, and enable
-   the Hook. Codex intentionally requires this manual security decision.
-4. Start a new Codex task.
+2. Start a new Codex task and use **Multica Codex Sync** from the `/` Skill
+   picker.
+3. Optional: to keep using the legacy `/multica ...` commands, open
+   **Settings → Hooks**, review the plugin's `UserPromptSubmit` command,
+   click **Trust**, and enable it. Codex intentionally requires this manual
+   security decision.
 
 Do not type `/hooks` in the chat box; Hook trust is managed in Settings.
 
@@ -95,6 +97,31 @@ Hyphen forms are also supported:
 /multica-doctor
 ```
 
+### Skill actions
+
+Choose **Multica Codex Sync** from the `/` Skill picker and submit `4158`,
+`bind 4158`, `status`, `stop`, `help`, or `doctor`. You can also invoke the
+Skill explicitly:
+
+```text
+$multica-codex-sync:control 4158
+$multica-codex-sync:control bind 4158
+$multica-codex-sync:control status
+$multica-codex-sync:control stop
+$multica-codex-sync:control help
+$multica-codex-sync:control doctor
+```
+
+### Skill actions versus legacy commands
+
+| Behavior | Skill action | Legacy `/multica` command |
+| --- | --- | --- |
+| Entry point | `/` Skill picker or `$multica-codex-sync:control` | First line of the chat prompt |
+| Execution | Agent invokes the installed tracker CLI directly | `UserPromptSubmit` Hook intercepts the command |
+| Hook Trust | Not required | Required |
+| Model turn | Runs in the current Agent turn | Status, stop, help, and doctor finish before a model turn; binding continues with injected issue context |
+| Compatibility | Recommended interface | Retained for existing workflows |
+
 Only the `/multica` namespace is recognized. The plugin deliberately does not
 claim generic issue or stop command names that may collide with Codex features,
 templates, or other plugins.
@@ -108,12 +135,17 @@ configured Wujie endpoint, the plugin retries once with the Wujie configuration
 and its own token. Multica credentials are never forwarded through the
 redirect, and unmatched redirect origins are rejected.
 
-These are direct Hook commands, not bundled Skills. `/multica status`,
-`/multica stop`, `/multica help`, and `/multica doctor` are intercepted before
-the prompt reaches the model, so they do not start a model-driven Skill turn.
-`/multica 4158` starts tracking and then intentionally lets the task continue
-with issue context. The commands do not appear in the Skill picker; type the
-exact command text in the chat box.
+Skill actions run the installed tracker CLI directly in the agent turn and use
+Codex's `CODEX_THREAD_ID` for exact task targeting. They do not require or pass
+through the `UserPromptSubmit` Hook. The Hook remains only as a compatibility
+path for legacy `/multica ...` commands.
+
+One Codex task can track only one Multica issue. If it is already linked to a
+different issue, the plugin does not switch it automatically. Stop the current
+tracker through the same interface, then bind the new issue in a separate
+action. For example, use `$multica-codex-sync:control stop` followed by
+`$multica-codex-sync:control 4158`, or `/multica stop` followed by
+`/multica 4158`.
 
 ## Upgrade
 
@@ -122,7 +154,7 @@ Choose between the latest `main` snapshot and an exact release tag:
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
 | omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
-| `v1.1.5` | Optional exact release | Remains pinned to that version |
+| `v1.2.0` | Optional exact release | Remains pinned to that version |
 
 The default installation above follows the stable channel. In Codex Desktop,
 open **Settings → Plugins → Marketplaces**, find **Multica Agent Sync**,

@@ -3,12 +3,25 @@
 All notable changes are documented here. This project follows Semantic
 Versioning.
 
-## Unreleased
+## 1.2.0 - 2026-08-21
+
+### Added
+
+- Add one `Multica Codex Sync` action Skill to the Skill picker. Bind, status,
+  stop, help, and doctor actions invoke the installed CLI directly and use
+  `CODEX_THREAD_ID` for exact task targeting; the Hook remains only for legacy
+  `/multica` commands.
 
 ### Changed
 
 - Use `main` as the repository's only long-lived branch and remove the
   `develop` release channel from contributor and installation guidance.
+
+### Fixed
+
+- Detect when a Codex task is already tracking a different issue and show an
+  explicit, non-automatic rebind sequence instead of injecting the newly
+  requested issue context.
 
 ## 1.1.5 - 2026-08-21
 

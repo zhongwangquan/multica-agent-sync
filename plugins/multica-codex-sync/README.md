@@ -1,4 +1,4 @@
-# Multica Codex Sync 1.1
+# Multica Codex Sync 1.2
 
 English | [简体中文](README.zh-CN.md)
 
@@ -8,9 +8,10 @@ and continuously syncs new visible messages and token usage.
 ## Setup
 
 Install through the repository marketplace as described in the
-[project README](../../README.md). Fully restart Codex Desktop, open
-**Settings → Hooks**, review the `UserPromptSubmit` command, click **Trust**,
-enable it, and start a new task. Hook trust cannot and should not be automated.
+[project README](../../README.md). Fully restart Codex Desktop and start a new
+task. Hook Trust is needed only for the legacy `/multica ...` commands; Skill
+actions invoke the tracker CLI directly. Hook Trust cannot and should not be
+automated.
 
 The plugin requires Python 3, `curl`, and an authenticated Multica CLI by
 default. An authenticated Wujie CLI is accepted as a compatibility fallback.
@@ -33,10 +34,32 @@ Equivalent hyphen forms are `/multica-4158`, `/multica-status`,
 `/multica-stop`, `/multica-help`, and `/multica-doctor`. No other command
 namespace is recognized.
 
-These are Hook commands, not Skills. Status, stop, help, and doctor are handled
-before the prompt reaches the model. Issue binding intentionally continues into
-the model after the Hook injects the exact issue context. Type the command text
-directly; no Multica runtime entries are added to the Skill picker.
+Choose **Multica Codex Sync** from the `/` Skill picker and submit `4158`,
+`bind 4158`, `status`, `stop`, `help`, or `doctor`. Explicit invocations are:
+
+```text
+$multica-codex-sync:control 4158
+$multica-codex-sync:control bind 4158
+$multica-codex-sync:control status
+$multica-codex-sync:control stop
+$multica-codex-sync:control help
+$multica-codex-sync:control doctor
+```
+
+| Behavior | Skill action | Legacy `/multica` command |
+| --- | --- | --- |
+| Execution | Agent calls the tracker CLI directly | Hook intercepts the first prompt line |
+| Hook Trust | Not required | Required |
+| Model turn | Runs in the current Agent turn | Informational actions finish before a model turn; binding continues with issue context |
+| Positioning | Recommended interface | Compatibility interface |
+
+Skill actions call the installed tracker CLI directly and use
+`CODEX_THREAD_ID` to target the exact current task. They bypass the Hook. The
+Hook remains only as a compatibility path for `/multica ...` commands.
+
+Each Codex task can track only one issue. If a task is already tracking a
+different issue, the plugin does not switch it automatically. Stop and bind in
+two separate actions through the same interface.
 
 ## Privacy and safety
 

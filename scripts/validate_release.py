@@ -28,8 +28,17 @@ def main() -> int:
     )
     require(manifest.get("version") == version, "manifest and VERSION differ")
     require(manifest.get("name") == "multica-codex-sync", "unexpected plugin name")
-    require("skills" not in manifest, "runtime controls must not be bundled Skills")
-    require(not (PLUGIN / "skills").exists(), "runtime Skill directory must be absent")
+    require(manifest.get("skills") == "./skills/", "unexpected plugin skills path")
+    skill_root = PLUGIN / "skills" / "control"
+    bundled_skills = sorted((PLUGIN / "skills").glob("*/SKILL.md"))
+    require(
+        bundled_skills == [skill_root / "SKILL.md"],
+        "plugin must bundle only the Multica control Skill",
+    )
+    require(
+        (skill_root / "agents" / "openai.yaml").is_file(),
+        "Multica control Skill is missing UI metadata",
+    )
     require(marketplace.get("name") == "multica-agent-sync", "unexpected marketplace name")
     require(len(marketplace.get("plugins", [])) == 1, "marketplace must expose one plugin")
     require(

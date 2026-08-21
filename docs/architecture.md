@@ -4,16 +4,15 @@ The current product is a Codex plugin with one host adapter and one Multica
 transport.
 
 ```text
-Codex UserPromptSubmit Hook
-          |
-          v
-command parser ----> lifecycle CLI ----> Multica local-run API
-                          |
-                          v
-                 Codex rollout adapter
-                          |
-                          v
-               private tracker state/logs
+Skill --------direct--------> lifecycle CLI ----> Multica local-run API
+                                  |
+legacy /multica Hook -------------+
+                                  |
+                                  v
+                         Codex rollout adapter
+                                  |
+                                  v
+                       private tracker state/logs
 ```
 
 ## Components
@@ -30,11 +29,11 @@ command parser ----> lifecycle CLI ----> Multica local-run API
 - `scripts/multica_codex_sync/cli.py` owns tracker lifecycle, status, doctor,
   and conservative cleanup.
 
-The plugin does not bundle runtime Skills. Fixed control commands (`status`,
-`stop`, `help`, and `doctor`) return Hook `decision: block` output before a
-model turn starts. The issue-binding command is different by design: it starts
-the tracker and continues the prompt with exact issue context so Codex can do
-the bound work.
+The plugin bundles one action Skill that invokes the lifecycle CLI directly in
+the agent turn. It uses `CODEX_THREAD_ID` for exact task-scoped status, stop,
+and binding operations. The `UserPromptSubmit` Hook recognizes only the legacy
+`/multica` namespace and remains a compatibility path; it does not intercept
+Skill chips or `$multica-codex-sync:control` invocations.
 
 ## Extension boundary
 
