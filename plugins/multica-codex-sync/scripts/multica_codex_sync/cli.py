@@ -32,6 +32,7 @@ from .core import (
     atomic_json,
     config_source,
     create_local_run,
+    detected_config_source,
     ensure_plugin_data,
     find_config,
     load_states,
@@ -252,6 +253,18 @@ def doctor(_args) -> int:
     selected_config = find_config()
     config_found = selected_config is not None
     config_path = str(selected_config[0]) if selected_config is not None else None
+    auth_config_valid = False
+    auth_check = "missing"
+    if config_found:
+        try:
+            Api(selected_config).request("GET", "/api/me")
+        except ApiError as error:
+            auth_check = "invalid" if error.status in {401, 403} else "unavailable"
+        except Exception:  # noqa: BLE001 - doctor returns only a redacted status
+            auth_check = "unavailable"
+        else:
+            auth_config_valid = True
+            auth_check = "ready"
     payload = {
         "plugin_version": plugin_version(),
         "plugin_root": str(PLUGIN_ROOT),
@@ -260,13 +273,17 @@ def doctor(_args) -> int:
         "multica_configured": config_found,
         "multica_config_path": config_path,
         "auth_config_source": (
-            config_source(selected_config[0]) if selected_config is not None else "missing"
+            config_source(selected_config[0])
+            if selected_config is not None
+            else detected_config_source()
         ),
+        "auth_config_valid": auth_config_valid,
+        "auth_check": auth_check,
         "codex_sessions_found": (CODEX_HOME / "sessions").is_dir(),
         "active_trackers": len(active_states()),
     }
     print(json.dumps(payload, ensure_ascii=False, indent=2))
-    return 0 if config_found else 1
+    return 0 if config_found and auth_config_valid else 1
 
 
 def _unlink_known(path: Path) -> bool:

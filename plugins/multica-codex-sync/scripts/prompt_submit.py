@@ -117,19 +117,33 @@ def format_doctor_payload(payload: Any) -> str:
     auth_config_source = payload.get("auth_config_source") or (
         "multica" if configured else "missing"
     )
+    auth_check = payload.get("auth_check") or ("ready" if configured else "missing")
+    auth_config_valid = bool(
+        payload.get("auth_config_valid", configured and auth_check == "ready")
+    )
+    login_status = (
+        "ready"
+        if configured and auth_config_valid
+        else "invalid"
+        if configured and auth_check == "invalid"
+        else "unavailable"
+        if configured
+        else "missing"
+    )
 
     lines = [
         "Multica Codex Sync 诊断：",
         "",
         f"version: {payload.get('plugin_version') or 'unknown'}",
-        f"multica_login: {'ready' if configured else 'missing'}",
+        f"multica_login: {login_status}",
         f"auth_config_source: {auth_config_source}",
+        f"auth_check: {auth_check}",
         f"plugin_data_permissions: {'private' if private else 'unsafe'}",
         f"codex_sessions: {'found' if sessions_found else 'missing'}",
         f"active_trackers: {active_trackers}",
         "",
     ]
-    if configured and private and sessions_found:
+    if configured and auth_config_valid and private and sessions_found:
         lines.append("基础环境正常。")
     else:
         lines.append("发现需要处理的项目：")
@@ -138,6 +152,10 @@ def format_doctor_payload(payload: Any) -> str:
                 "- 尚未找到有效的 Multica 或 Wujie 登录配置，"
                 "请先安装并登录 Multica CLI 或 Wujie CLI。"
             )
+        elif auth_check == "invalid":
+            lines.append("- 已找到登录配置，但鉴权已失效，请使用当前 CLI 重新登录。")
+        elif not auth_config_valid:
+            lines.append("- 已找到登录配置，但暂时无法向服务端验证。")
         if not private:
             lines.append("- 插件数据目录权限不安全，已拒绝将其视为正常环境。")
         if not sessions_found:

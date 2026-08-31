@@ -34,7 +34,6 @@ WUJIE_CONFIG_CANDIDATES = [
     WUJIE_HOME / "config.json",
     WUJIE_HOME / "config-local.json",
 ]
-CONFIG_CANDIDATES = [*MULTICA_CONFIG_CANDIDATES, *WUJIE_CONFIG_CANDIDATES]
 USAGE_TOTAL_KEYS = {
     "input_tokens": ("input_tokens",),
     "output_tokens": ("output_tokens",),
@@ -266,8 +265,27 @@ def select_states(target: str | None) -> list[tuple[Path, dict]]:
     ]
 
 
+def detected_config_source() -> str:
+    if any(path.exists() for path in WUJIE_CONFIG_CANDIDATES):
+        return "wujie"
+    if any(path.exists() for path in MULTICA_CONFIG_CANDIDATES):
+        return "multica"
+    return "missing"
+
+
 def find_config(candidates: list[Path] | None = None) -> tuple[Path, dict] | None:
-    for path in CONFIG_CANDIDATES if candidates is None else candidates:
+    if candidates is None:
+        # Wujie is the current CLI identity. Once any Wujie config exists,
+        # stay within that config family instead of letting a stale legacy
+        # Multica token silently take precedence or act as a fallback.
+        source = detected_config_source()
+        if source == "wujie":
+            candidates = WUJIE_CONFIG_CANDIDATES
+        elif source == "multica":
+            candidates = MULTICA_CONFIG_CANDIDATES
+        else:
+            candidates = []
+    for path in candidates:
         value = read_json(path)
         if isinstance(value, dict) and value.get("token") and value.get("server_url"):
             return path, value
@@ -310,8 +328,8 @@ def parse_curl_output(output: str) -> tuple[str, int, str]:
 
 
 class Api:
-    def __init__(self):
-        selected = find_config()
+    def __init__(self, selected_config: tuple[Path, dict] | None = None):
+        selected = selected_config if selected_config is not None else find_config()
         if selected is None:
             raise RuntimeError("Multica or Wujie config with server_url/token was not found")
         self._set_config(*selected)
