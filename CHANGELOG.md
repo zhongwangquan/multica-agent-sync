@@ -3,6 +3,18 @@
 All notable changes are documented here. This project follows Semantic
 Versioning.
 
+## 1.2.1 - 2026-08-31
+
+### Fixed
+
+- Select the current authentication config family before considering legacy
+  compatibility configs, so stale legacy credentials cannot override the
+  active login.
+- Make `/multica doctor` validate the selected token through the server identity
+  endpoint and distinguish invalid credentials from an unavailable service.
+- Keep doctor failures redacted when the selected config cannot be read or the
+  diagnostic process exits without a structured result.
+
 ## 1.2.0 - 2026-08-21
 
 ### Added

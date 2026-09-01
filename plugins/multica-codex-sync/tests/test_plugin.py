@@ -6,7 +6,10 @@ import stat
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
+from contextlib import contextmanager
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest import mock
 
@@ -19,6 +22,42 @@ sys.path.insert(0, str(SCRIPTS))
 
 import prompt_submit
 from multica_codex_sync import cli, codex_adapter, core
+
+
+@contextmanager
+def auth_probe_server(expected_token: str):
+    requests: list[str] = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            authorization = self.headers.get("Authorization", "")
+            requests.append(authorization)
+            status = (
+                200
+                if self.path == "/api/me"
+                and authorization == f"Bearer {expected_token}"
+                else 401
+            )
+            payload = b"{}" if status == 200 else b'{"error":"invalid token"}'
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def log_message(self, _format: str, *_args) -> None:
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        host, port = server.server_address
+        yield f"http://{host}:{port}", requests
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
 
 
 class PluginSandbox:
@@ -79,16 +118,22 @@ if sys.argv[1:] and sys.argv[1] == 'status':
             'status': 'running',
             'watcher_alive': True,
         })
-    print(json.dumps({'plugin_version': '1.2.0', 'trackers': trackers}))
+    print(json.dumps({'plugin_version': '1.2.1', 'trackers': trackers}))
 elif sys.argv[1:] == ['doctor']:
+    if os.environ.get('FAKE_DOCTOR_FAILURE') == '1':
+        print("Permission denied: '/private/config/with-token-location.json'", file=sys.stderr)
+        raise SystemExit(1)
     configured = os.environ.get('FAKE_DOCTOR_CONFIGURED', '1') == '1'
     print(json.dumps({
-        'plugin_version': '1.2.0',
+        'plugin_version': '1.2.1',
         'plugin_root': '/private/plugin/root',
         'plugin_data': '/private/plugin/data',
         'plugin_data_private': True,
         'multica_configured': configured,
         'multica_config_path': '/private/config/with-token-location.json',
+        'auth_config_source': 'multica',
+        'auth_config_valid': configured,
+        'auth_check': 'ready' if configured else 'missing',
         'codex_sessions_found': True,
         'active_trackers': 2,
     }))
@@ -132,7 +177,7 @@ class PluginManifestTests(unittest.TestCase):
         hook = json.loads((PLUGIN_ROOT / "hooks/hooks.json").read_text())
 
         self.assertEqual(manifest["name"], PLUGIN_ROOT.name)
-        self.assertEqual(manifest["version"], "1.2.0")
+        self.assertEqual(manifest["version"], "1.2.1")
         self.assertEqual(manifest["license"], "MIT")
         self.assertEqual(
             manifest["interface"]["displayName"], "Multica Codex Sync"
@@ -350,7 +395,7 @@ class PluginHookTests(unittest.TestCase):
                 self.assertEqual(output["decision"], "block")
                 self.assertNotIn("hookSpecificOutput", output)
                 reason = output["reason"]
-                self.assertIn("version: 1.2.0", reason)
+                self.assertIn("version: 1.2.1", reason)
                 self.assertIn("multica_login: ready", reason)
                 self.assertIn("auth_config_source: multica", reason)
                 self.assertIn("active_trackers: 2", reason)
@@ -369,6 +414,20 @@ class PluginHookTests(unittest.TestCase):
             reason = json.loads(result.stdout)["reason"]
             self.assertIn("multica_login: missing", reason)
             self.assertIn("请先安装并登录 Multica CLI", reason)
+
+    def test_doctor_failure_does_not_expose_raw_error_details(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            sandbox = PluginSandbox(Path(directory))
+            result, arguments = sandbox.run_hook(
+                {"prompt": "/multica doctor"},
+                {"FAKE_DOCTOR_FAILURE": "1"},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(arguments.read_text()), ["doctor"])
+            reason = json.loads(result.stdout)["reason"]
+            self.assertIn("Multica 诊断失败", reason)
+            self.assertNotIn("/private/", reason)
+            self.assertNotIn("token", reason.lower())
 
     def test_other_namespaces_and_embedded_commands_are_ignored(self) -> None:
         commands = (
@@ -502,7 +561,7 @@ class PluginHookTests(unittest.TestCase):
 
     def test_status_formatter_shows_only_current_task(self) -> None:
         payload = {
-            "plugin_version": "1.2.0",
+            "plugin_version": "1.2.1",
             "trackers": [
                 {
                     "issue": "OPE-1",
@@ -747,7 +806,8 @@ class PluginFileSafetyTests(unittest.TestCase):
                 return subprocess.CompletedProcess(command, 0, "{}\n200", "")
 
             with (
-                mock.patch.object(core, "CONFIG_CANDIDATES", [config]),
+                mock.patch.object(core, "WUJIE_CONFIG_CANDIDATES", []),
+                mock.patch.object(core, "MULTICA_CONFIG_CANDIDATES", [config]),
                 mock.patch.object(core, "TRACK_HOME", track_home),
                 mock.patch.object(core.subprocess, "run", side_effect=fake_run),
             ):
@@ -756,7 +816,7 @@ class PluginFileSafetyTests(unittest.TestCase):
             self.assertIsNotNone(captured_config)
             self.assertFalse(captured_config.exists())
 
-    def test_api_uses_matching_wujie_config_for_permanent_redirect(self) -> None:
+    def test_api_uses_wujie_config_directly_when_both_families_exist(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             multica_config = root / "multica.json"
@@ -786,6 +846,55 @@ class PluginFileSafetyTests(unittest.TestCase):
                 config_path = Path(command[command.index("--config") + 1])
                 curl_config = config_path.read_text(encoding="utf-8")
                 curl_configs.append(curl_config)
+                return subprocess.CompletedProcess(command, 0, "{}\n200\n", "")
+
+            with (
+                mock.patch.object(core, "read_json", wraps=core.read_json) as read_json,
+                mock.patch.object(
+                    core,
+                    "MULTICA_CONFIG_CANDIDATES",
+                    [multica_config],
+                ),
+                mock.patch.object(
+                    core,
+                    "WUJIE_CONFIG_CANDIDATES",
+                    [wujie_config],
+                ),
+                mock.patch.object(core, "TRACK_HOME", track_home),
+                mock.patch.object(core.subprocess, "run", side_effect=fake_run),
+            ):
+                response = core.Api().request("GET", "/api/test")
+            self.assertEqual(response, {})
+            self.assertEqual(len(curl_configs), 1)
+            self.assertIn('url = "https://new.example/api/test"', curl_configs[0])
+            self.assertIn('header = "Authorization: Bearer WUJIE-TOKEN"', curl_configs[0])
+            self.assertNotIn("MULTICA-TOKEN", curl_configs[0])
+            read_json.assert_called_once_with(wujie_config)
+
+    def test_api_uses_matching_wujie_config_for_legacy_redirect(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            multica_config = root / "multica.json"
+            multica_value = {
+                "server_url": "https://old.example",
+                "token": "MULTICA-TOKEN",
+            }
+            multica_config.write_text(json.dumps(multica_value), encoding="utf-8")
+            wujie_config = root / "wujie.json"
+            wujie_config.write_text(
+                json.dumps(
+                    {
+                        "server_url": "https://new.example",
+                        "token": "WUJIE-TOKEN",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            curl_configs = []
+
+            def fake_run(command, **_kwargs):
+                config_path = Path(command[command.index("--config") + 1])
+                curl_configs.append(config_path.read_text(encoding="utf-8"))
                 if len(curl_configs) == 1:
                     return subprocess.CompletedProcess(
                         command,
@@ -797,30 +906,19 @@ class PluginFileSafetyTests(unittest.TestCase):
 
             with (
                 mock.patch.object(
-                    core,
-                    "MULTICA_CONFIG_CANDIDATES",
-                    [multica_config],
+                    core, "MULTICA_CONFIG_CANDIDATES", [multica_config]
                 ),
-                mock.patch.object(
-                    core,
-                    "WUJIE_CONFIG_CANDIDATES",
-                    [wujie_config],
-                ),
-                mock.patch.object(
-                    core,
-                    "CONFIG_CANDIDATES",
-                    [multica_config, wujie_config],
-                ),
-                mock.patch.object(core, "TRACK_HOME", track_home),
+                mock.patch.object(core, "WUJIE_CONFIG_CANDIDATES", [wujie_config]),
+                mock.patch.object(core, "TRACK_HOME", root / "plugin-data"),
                 mock.patch.object(core.subprocess, "run", side_effect=fake_run),
             ):
-                response = core.Api().request("GET", "/api/test")
+                response = core.Api((multica_config, multica_value)).request(
+                    "GET", "/api/test"
+                )
             self.assertEqual(response, {})
             self.assertEqual(len(curl_configs), 2)
-            self.assertIn('url = "https://old.example/api/test"', curl_configs[0])
-            self.assertIn('header = "Authorization: Bearer MULTICA-TOKEN"', curl_configs[0])
-            self.assertIn('url = "https://new.example/api/test"', curl_configs[1])
-            self.assertIn('header = "Authorization: Bearer WUJIE-TOKEN"', curl_configs[1])
+            self.assertIn("MULTICA-TOKEN", curl_configs[0])
+            self.assertIn("WUJIE-TOKEN", curl_configs[1])
             self.assertNotIn("MULTICA-TOKEN", curl_configs[1])
 
     def test_api_does_not_follow_an_unconfigured_redirect_origin(self) -> None:
@@ -838,16 +936,6 @@ class PluginFileSafetyTests(unittest.TestCase):
                 encoding="utf-8",
             )
             wujie_config = root / "wujie.json"
-            wujie_config.write_text(
-                json.dumps(
-                    {
-                        "server_url": "https://configured.example",
-                        "token": "WUJIE-TOKEN",
-                    }
-                )
-                + "\n",
-                encoding="utf-8",
-            )
             calls = []
 
             def fake_run(command, **_kwargs):
@@ -869,11 +957,6 @@ class PluginFileSafetyTests(unittest.TestCase):
                     core,
                     "WUJIE_CONFIG_CANDIDATES",
                     [wujie_config],
-                ),
-                mock.patch.object(
-                    core,
-                    "CONFIG_CANDIDATES",
-                    [multica_config, wujie_config],
                 ),
                 mock.patch.object(core, "TRACK_HOME", root / "plugin-data"),
                 mock.patch.object(core.subprocess, "run", side_effect=fake_run),
@@ -899,13 +982,15 @@ class PluginLifecycleTests(unittest.TestCase):
             )
 
     def test_doctor_reuses_login_without_printing_token(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory() as directory, auth_probe_server(
+            "TOKEN-MUST-NOT-LEAK"
+        ) as (server_url, requests):
             sandbox = PluginSandbox(Path(directory))
             sandbox.multica_home.mkdir(parents=True)
             sandbox.codex_home.joinpath("sessions").mkdir(parents=True)
             secret = "TOKEN-MUST-NOT-LEAK"
             sandbox.multica_home.joinpath("config.json").write_text(
-                json.dumps({"server_url": "https://multica.test", "token": secret}),
+                json.dumps({"server_url": server_url, "token": secret}),
                 encoding="utf-8",
             )
             result = sandbox.run_cli("doctor")
@@ -918,17 +1003,22 @@ class PluginLifecycleTests(unittest.TestCase):
                 str(sandbox.multica_home / "config.json"),
             )
             self.assertEqual(payload["auth_config_source"], "multica")
+            self.assertTrue(payload["auth_config_valid"])
+            self.assertEqual(payload["auth_check"], "ready")
+            self.assertEqual(requests, [f"Bearer {secret}"])
             self.assertTrue(payload["plugin_data_private"])
-            self.assertEqual(payload["plugin_version"], "1.2.0")
+            self.assertEqual(payload["plugin_version"], "1.2.1")
 
     def test_doctor_falls_back_to_wujie_login_without_printing_token(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory() as directory, auth_probe_server(
+            "WUJIE-TOKEN-MUST-NOT-LEAK"
+        ) as (server_url, requests):
             sandbox = PluginSandbox(Path(directory))
             sandbox.wujie_home.mkdir(parents=True)
             secret = "WUJIE-TOKEN-MUST-NOT-LEAK"
             config_path = sandbox.wujie_home / "config.json"
             config_path.write_text(
-                json.dumps({"server_url": "https://wujie.test", "token": secret}),
+                json.dumps({"server_url": server_url, "token": secret}),
                 encoding="utf-8",
             )
             result = sandbox.run_cli("doctor")
@@ -938,26 +1028,116 @@ class PluginLifecycleTests(unittest.TestCase):
             self.assertTrue(payload["multica_configured"])
             self.assertEqual(payload["multica_config_path"], str(config_path))
             self.assertEqual(payload["auth_config_source"], "wujie")
+            self.assertTrue(payload["auth_config_valid"])
+            self.assertEqual(requests, [f"Bearer {secret}"])
 
-    def test_doctor_prefers_multica_login_over_wujie_login(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+    def test_doctor_prefers_wujie_login_over_legacy_multica_login(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, auth_probe_server(
+            "WUJIE-TOKEN"
+        ) as (server_url, requests):
             sandbox = PluginSandbox(Path(directory))
             sandbox.multica_home.mkdir(parents=True)
             sandbox.wujie_home.mkdir(parents=True)
-            multica_config = sandbox.multica_home / "config.json"
-            multica_config.write_text(
-                json.dumps({"server_url": "https://multica.test", "token": "one"}),
+            sandbox.multica_home.joinpath("config.json").write_text(
+                json.dumps({"server_url": server_url, "token": "MULTICA-TOKEN"}),
                 encoding="utf-8",
             )
-            sandbox.wujie_home.joinpath("config.json").write_text(
-                json.dumps({"server_url": "https://wujie.test", "token": "two"}),
+            wujie_config = sandbox.wujie_home / "config.json"
+            wujie_config.write_text(
+                json.dumps({"server_url": server_url, "token": "WUJIE-TOKEN"}),
                 encoding="utf-8",
             )
             result = sandbox.run_cli("doctor")
             self.assertEqual(result.returncode, 0, result.stderr)
             payload = json.loads(result.stdout)
-            self.assertEqual(payload["multica_config_path"], str(multica_config))
-            self.assertEqual(payload["auth_config_source"], "multica")
+            self.assertEqual(payload["multica_config_path"], str(wujie_config))
+            self.assertEqual(payload["auth_config_source"], "wujie")
+            self.assertTrue(payload["auth_config_valid"])
+            self.assertEqual(requests, ["Bearer WUJIE-TOKEN"])
+
+    def test_doctor_does_not_try_legacy_multica_when_wujie_login_is_expired(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory, auth_probe_server(
+            "MULTICA-TOKEN"
+        ) as (server_url, requests):
+            sandbox = PluginSandbox(Path(directory))
+            sandbox.multica_home.mkdir(parents=True)
+            sandbox.wujie_home.mkdir(parents=True)
+            sandbox.multica_home.joinpath("config.json").write_text(
+                json.dumps({"server_url": server_url, "token": "MULTICA-TOKEN"}),
+                encoding="utf-8",
+            )
+            wujie_config = sandbox.wujie_home / "config.json"
+            wujie_config.write_text(
+                json.dumps({"server_url": server_url, "token": "EXPIRED-WUJIE"}),
+                encoding="utf-8",
+            )
+            result = sandbox.run_cli("doctor")
+            self.assertEqual(result.returncode, 1, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["multica_config_path"], str(wujie_config))
+            self.assertEqual(payload["auth_config_source"], "wujie")
+            self.assertFalse(payload["auth_config_valid"])
+            self.assertEqual(payload["auth_check"], "invalid")
+            self.assertTrue(requests)
+            self.assertEqual(set(requests), {"Bearer EXPIRED-WUJIE"})
+
+    def test_doctor_does_not_use_legacy_multica_when_wujie_config_is_incomplete(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            sandbox = PluginSandbox(Path(directory))
+            sandbox.multica_home.mkdir(parents=True)
+            sandbox.wujie_home.mkdir(parents=True)
+            sandbox.multica_home.joinpath("config.json").write_text(
+                json.dumps(
+                    {"server_url": "https://multica.test", "token": "VALID-LEGACY"}
+                ),
+                encoding="utf-8",
+            )
+            sandbox.wujie_home.joinpath("config.json").write_text(
+                json.dumps({"server_url": "https://wujie.test"}),
+                encoding="utf-8",
+            )
+            result = sandbox.run_cli("doctor")
+            self.assertEqual(result.returncode, 1, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertFalse(payload["multica_configured"])
+            self.assertEqual(payload["auth_config_source"], "wujie")
+            self.assertEqual(payload["auth_check"], "missing")
+
+    def test_doctor_redacts_unreadable_wujie_config(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            sandbox = PluginSandbox(Path(directory))
+            sandbox.multica_home.mkdir(parents=True)
+            sandbox.wujie_home.mkdir(parents=True)
+            sandbox.multica_home.joinpath("config.json").write_text(
+                json.dumps(
+                    {"server_url": "https://multica.test", "token": "LEGACY-TOKEN"}
+                ),
+                encoding="utf-8",
+            )
+            wujie_config = sandbox.wujie_home / "config.json"
+            wujie_config.write_text(
+                json.dumps(
+                    {"server_url": "https://wujie.test", "token": "CURRENT-TOKEN"}
+                ),
+                encoding="utf-8",
+            )
+            wujie_config.chmod(0)
+            try:
+                result = sandbox.run_cli("doctor")
+            finally:
+                wujie_config.chmod(0o600)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertFalse(payload["multica_configured"])
+            self.assertEqual(payload["auth_config_source"], "wujie")
+            self.assertEqual(payload["auth_check"], "unavailable")
+            self.assertNotIn(str(wujie_config), result.stdout + result.stderr)
+            self.assertNotIn("CURRENT-TOKEN", result.stdout + result.stderr)
+            self.assertNotIn("LEGACY-TOKEN", result.stdout + result.stderr)
 
     def test_doctor_fails_cleanly_when_multica_is_not_configured(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

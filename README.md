@@ -51,7 +51,7 @@ registering the marketplace:
 
 ```bash
 # Optional step 1 of 2: register an exact version instead of latest stable.
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.2.0
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.2.1
 
 # Step 2 of 2: install and enable that exact plugin version.
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -116,8 +116,11 @@ The Hook recognizes only the `/multica` namespace. The separate
 command names that may collide with Codex features, templates, or other
 plugins.
 
-Authentication is read from `MULTICA_HOME` or `~/.multica`. Credentials are
-never forwarded to an untrusted redirect origin.
+The authentication config family is selected before credentials are read. If
+a current CLI config file exists, only that family is used; legacy
+`MULTICA_HOME` or `~/.multica` is considered only when no current config
+exists. `/multica doctor` verifies the selected token through `/api/me`.
+Credentials are never forwarded to an untrusted redirect origin.
 
 Each Codex task can track only one Multica issue. To switch issues, first send
 `/multica stop`, then send the new issue number in a separate command. The
@@ -130,7 +133,7 @@ Choose between the latest `main` snapshot and an exact release tag:
 | Ref | Purpose | Update behavior |
 | --- | --- | --- |
 | omitted (default `main`) | Latest stable channel | Changes only after marketplace upgrade |
-| `v1.2.0` | Optional exact release | Remains pinned to that version |
+| `v1.2.1` | Optional exact release | Remains pinned to that version |
 
 The default installation above follows the stable channel. In Codex Desktop,
 open **Settings → Plugins → Marketplaces**, find **Multica Agent Sync**,

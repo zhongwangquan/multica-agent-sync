@@ -12,8 +12,8 @@ Install through the repository marketplace as described in the
 the plugin Hook in Settings, then start a new task. Hook Trust cannot be
 automated.
 
-The plugin requires Python 3, `curl`, and an authenticated Multica CLI. The
-chat command namespace is `/multica`.
+The plugin requires Python 3, `curl`, and an authenticated compatible CLI
+installation. The chat command namespace is `/multica`.
 
 ## Use
 
@@ -37,6 +37,10 @@ Type `/multica-sync`, choose **Multica Sync**, and enter `4158`, `bind 4158`,
 
 Each Codex task can track only one issue. To switch issues, stop the current
 tracking first, then bind the new issue in a separate action.
+
+Authentication selection is family-aware: an existing current config takes
+exclusive precedence and is verified before use. Legacy Multica config is read
+only when no current config exists.
 
 ## Privacy and safety
 

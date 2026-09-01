@@ -46,7 +46,7 @@ codex plugin add multica-codex-sync@multica-agent-sync
 
 ```bash
 # 可选第 1/2 步：指定准确版本，而不是使用最新稳定版。
-codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.2.0
+codex plugin marketplace add zhongwangquan/multica-agent-sync --ref v1.2.1
 
 # 第 2/2 步：安装并启用这个准确版本。
 codex plugin add multica-codex-sync@multica-agent-sync
@@ -107,8 +107,11 @@ Hook 只识别 `/multica` 命名空间。独立的 `/multica-sync` 名称属于
 可选 Skill，因此用户仍可以手动输入 `/multica` 指令。插件不占用容易和
 Codex 功能、模板或其他插件冲突的通用 issue、stop 命令。
 
-身份信息从 `MULTICA_HOME` 或 `~/.multica` 读取。凭据不会被透传到
-不可信的重定向 origin。
+插件会先确定配置体系，再读取和验证凭据。只要存在当前 CLI
+配置文件，就只使用该配置体系；仅当当前配置完全不存在时，才兼容
+`MULTICA_HOME` 或 `~/.multica` 旧配置。`/multica doctor` 会通过
+`/api/me` 验证当前选中的 token。凭据不会被透传到不可信的
+重定向 origin。
 
 每个 Codex 任务只能跟踪一个 Multica issue。如需换绑，先发送
 `/multica stop`，再单独发送新的 issue 编号。插件不会自动换绑。
@@ -120,7 +123,7 @@ Codex 功能、模板或其他插件冲突的通用 issue、stop 命令。
 | Ref | 用途 | 更新行为 |
 | --- | --- | --- |
 | 不指定（默认 `main`） | 最新稳定通道 | 仅在执行 marketplace upgrade 后变化 |
-| `v1.2.0` | 可选固定版本 | 始终保持在该版本 |
+| `v1.2.1` | 可选固定版本 | 始终保持在该版本 |
 
 上面的默认安装即跟随稳定通道。在 Codex Desktop 中打开
 **设置 → Plugins → Marketplaces**，找到 **Multica Agent Sync** 并点击
