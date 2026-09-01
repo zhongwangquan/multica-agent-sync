@@ -250,11 +250,16 @@ def status(args) -> int:
 def doctor(_args) -> int:
     """Report local readiness without printing Multica or Wujie credentials."""
     ensure_plugin_data()
-    selected_config = find_config()
+    detected_source = detected_config_source()
+    selected_config = None
+    auth_check = "missing"
+    try:
+        selected_config = find_config()
+    except Exception:  # noqa: BLE001 - doctor must return only redacted status
+        auth_check = "unavailable"
     config_found = selected_config is not None
     config_path = str(selected_config[0]) if selected_config is not None else None
     auth_config_valid = False
-    auth_check = "missing"
     if config_found:
         try:
             Api(selected_config).request("GET", "/api/me")
@@ -275,7 +280,7 @@ def doctor(_args) -> int:
         "auth_config_source": (
             config_source(selected_config[0])
             if selected_config is not None
-            else detected_config_source()
+            else detected_source
         ),
         "auth_config_valid": auth_config_valid,
         "auth_check": auth_check,

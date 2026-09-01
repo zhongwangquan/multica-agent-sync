@@ -12,6 +12,8 @@ Versioning.
   active login.
 - Make `/multica doctor` validate the selected token through the server identity
   endpoint and distinguish invalid credentials from an unavailable service.
+- Keep doctor failures redacted when the selected config cannot be read or the
+  diagnostic process exits without a structured result.
 
 ## 1.2.0 - 2026-08-21
 

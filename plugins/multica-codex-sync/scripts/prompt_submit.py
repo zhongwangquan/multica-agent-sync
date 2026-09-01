@@ -121,15 +121,12 @@ def format_doctor_payload(payload: Any) -> str:
     auth_config_valid = bool(
         payload.get("auth_config_valid", configured and auth_check == "ready")
     )
-    login_status = (
-        "ready"
-        if configured and auth_config_valid
-        else "invalid"
-        if configured and auth_check == "invalid"
-        else "unavailable"
-        if configured
-        else "missing"
-    )
+    if configured and auth_config_valid:
+        login_status = "ready"
+    elif auth_check in {"invalid", "unavailable"}:
+        login_status = auth_check
+    else:
+        login_status = "missing"
 
     lines = [
         "Multica Codex Sync 诊断：",
@@ -147,7 +144,11 @@ def format_doctor_payload(payload: Any) -> str:
         lines.append("基础环境正常。")
     else:
         lines.append("发现需要处理的项目：")
-        if not configured:
+        if auth_check == "unavailable":
+            lines.append(
+                "- 当前登录配置无法读取或验证，请检查文件权限和服务状态。"
+            )
+        elif not configured:
             lines.append(
                 "- 尚未找到有效的 Multica 或 Wujie 登录配置，"
                 "请先安装并登录 Multica CLI 或 Wujie CLI。"
@@ -392,8 +393,7 @@ def main() -> int:
         if isinstance(doctor_payload, dict) and doctor_payload:
             block(format_doctor_payload(doctor_payload))
         else:
-            detail = (result.stderr or result.stdout or "doctor failed").strip()
-            block(f"Multica 诊断失败：{detail}")
+            block("Multica 诊断失败，请确认插件安装与登录状态后重试。")
         return 0
 
     if status_match:
